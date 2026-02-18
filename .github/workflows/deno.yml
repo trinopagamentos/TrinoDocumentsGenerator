@@ -13,9 +13,6 @@ jobs:
   ci:
     name: Lint, Typecheck & Test
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        deno-version: [v2.6.x]
 
     steps:
       - name: Checkout
@@ -24,7 +21,11 @@ jobs:
       - name: Setup Deno
         uses: denoland/setup-deno@v2
         with:
-          deno-version: ${{ matrix.deno-version }}
+          deno-version: lts
+          cache: true
+
+      - name: Install
+        run: deno install
 
       - name: Format
         run: deno task biome:chk
