@@ -1,6 +1,10 @@
 {
   "version": "5",
   "specifiers": {
+    "jsr:@std/assert@1": "1.0.18",
+    "jsr:@std/assert@^1.0.17": "1.0.18",
+    "jsr:@std/internal@^1.0.12": "1.0.12",
+    "jsr:@std/testing@1": "1.0.17",
     "npm:@aws-sdk/client-s3@*": "3.992.0",
     "npm:@aws-sdk/client-s3@3.992.0": "3.992.0",
     "npm:@aws-sdk/s3-request-presigner@*": "3.992.0",
@@ -28,6 +32,26 @@
     "npm:rxjs@7.8.2": "7.8.2",
     "npm:sst@*": "3.18.7",
     "npm:sst@3.18.7": "3.18.7"
+  },
+  "jsr": {
+    "@std/assert@1.0.16": {
+      "integrity": "6a7272ed1eaa77defe76e5ff63ca705d9c495077e2d5fd0126d2b53fc5bd6532"
+    },
+    "@std/assert@1.0.18": {
+      "integrity": "270245e9c2c13b446286de475131dc688ca9abcd94fc5db41d43a219b34d1c78",
+      "dependencies": [
+        "jsr:@std/internal"
+      ]
+    },
+    "@std/internal@1.0.12": {
+      "integrity": "972a634fd5bc34b242024402972cd5143eac68d8dffaca5eaa4dba30ce17b027"
+    },
+    "@std/testing@1.0.17": {
+      "integrity": "87bdc2700fa98249d48a17cd72413352d3d3680dcfbdb64947fd0982d6bbf681",
+      "dependencies": [
+        "jsr:@std/assert@^1.0.17"
+      ]
+    }
   },
   "npm": {
     "@aws-crypto/crc32@5.2.0": {
@@ -2589,6 +2613,8 @@
   },
   "workspace": {
     "dependencies": [
+      "jsr:@std/assert@1",
+      "jsr:@std/testing@1",
       "npm:@aws-sdk/client-s3@*",
       "npm:@aws-sdk/s3-request-presigner@*",
       "npm:@biomejs/biome@*",

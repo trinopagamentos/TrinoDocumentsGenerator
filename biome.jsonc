@@ -18,6 +18,8 @@
             "deno.json*",
             "package.json",
             "*.md",
+            "*.yml",
+            "*.yaml",
             "!**/coverage",
             "!**/node_modules",
             "!**/.sst",
