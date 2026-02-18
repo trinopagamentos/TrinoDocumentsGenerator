@@ -1,0 +1,45 @@
+{
+    "fmt": {
+        "useTabs": true,
+        "indentWidth": 4,
+        "lineWidth": 160,
+        "semiColons": true,
+        "singleQuote": true,
+        "proseWrap": "always",
+        "include": ["src/"]
+    },
+    "unstable": ["net"],
+    "compilerOptions": {
+        "experimentalDecorators": true,
+        "emitDecoratorMetadata": true
+    },
+    "imports": {
+        "@biomejs/biome": "npm:@biomejs/biome",
+        "@nestjs/common": "npm:@nestjs/common",
+        "@nestjs/core": "npm:@nestjs/core",
+        "@nestjs/bullmq": "npm:@nestjs/bullmq",
+        "@nestjs/config": "npm:@nestjs/config",
+        "bullmq": "npm:bullmq",
+        "puppeteer-core": "npm:puppeteer-core",
+        "@sparticuz/chromium": "npm:@sparticuz/chromium",
+        "@aws-sdk/client-s3": "npm:@aws-sdk/client-s3",
+        "@aws-sdk/s3-request-presigner": "npm:@aws-sdk/s3-request-presigner",
+        "ioredis": "npm:ioredis",
+        "reflect-metadata": "npm:reflect-metadata",
+        "rxjs": "npm:rxjs",
+        "sst": "npm:sst",
+        "@/": "./src/"
+    },
+    "tasks": {
+        "start": "deno run -A --unstable-net src/main.ts",
+        "dev": "deno run -A --unstable-net --watch src/main.ts",
+        "lint": "deno lint",
+        "typecheck": "deno check src/main.ts",
+        "test": "deno test -A",
+        "biome:chk": "biome check --use-editorconfig=true",
+        "biome:fix": "biome check --write --use-editorconfig=true",
+        "redis:local": "docker start local_redis || docker run --rm --detach --name local_redis -p 6379:6379 redis:7-alpine",
+        "sst:dev": "sst dev"
+    },
+    "allowScripts": ["npm:@nestjs/core@11.1.14", "npm:msgpackr-extract@3.0.3"]
+}

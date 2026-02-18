@@ -1,0 +1,14 @@
+# pkgs
+node_modules
+
+# sst
+.sst
+
+# IA
+.claude
+
+# envs
+.env
+.env.fallback
+.env.prod
+.env.stage
