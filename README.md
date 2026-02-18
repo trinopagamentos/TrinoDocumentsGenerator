@@ -10,7 +10,8 @@ TrinoCore (API)  →  Redis (BullMQ)  →  TrinoDocWorker  →  AWS S3
                            queue           Chromium
 ```
 
-O worker **não expõe nenhuma porta HTTP**. É um consumer puro que roda como um serviço ECS sem load balancer.
+O worker **não expõe nenhuma porta HTTP**.  
+É um consumer puro que roda como um serviço ECS sem load balancer.
 
 ## Stack
 
@@ -75,7 +76,8 @@ src/
 deno task redis:local
 ```
 
-Inicia um contêiner Redis 7 (Alpine) na porta `6379`. Na próxima execução, reutiliza o contêiner existente.
+Inicia um contêiner Redis 7 (Alpine) na porta `6379`.  
+Na próxima execução, reutiliza o contêiner existente.
 
 ### 2. Configure as variáveis de ambiente
 
@@ -202,10 +204,10 @@ git push origin 1.1.1
 
 ```sh
 # Staging
-./scripts/deploy-image.sh -e stage
+deno task build:stage
 
 # Produção
-./scripts/deploy-image.sh -e prod
+deno task build
 ```
 
 O script resolve a versão automaticamente a partir da tag mais recente:
@@ -245,4 +247,3 @@ Conecta o worker local ao ambiente de nuvem configurado, permitindo debugar com 
 | Máximo de instâncias | 3     |
 | Scale-up por CPU     | > 70% |
 | Scale-up por memória | > 70% |
-

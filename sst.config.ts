@@ -92,7 +92,7 @@ export default $config({
 
 		// * ============ Worker image ============
 		let image: string | undefined;
-		let version = process.env.APP_VERSION ?? "not-defined";
+		let version = "dev";
 
 		if (isStaging && process.env.IMG_REPO_STAGING && process.env.IMG_VERSION_STAGING) {
 			image = `${process.env.IMG_REPO_STAGING}:${process.env.IMG_VERSION_STAGING}`;

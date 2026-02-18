@@ -28,7 +28,4 @@ COPY --chown=deno:deno deno.json* .
 # Pre-cache de dependências
 RUN deno cache src/main.ts
 
-# Warmup caches
-RUN timeout 10s deno -A src/main.ts || [ $? -eq 124 ] || exit 1
-
 CMD ["task", "start"]
