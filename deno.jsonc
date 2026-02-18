@@ -45,7 +45,7 @@
         "build": "./scripts/deploy-image.sh -e prod",
         "sst:dev": "sst dev",
         "deploy:stage": "sst deploy --stage stage",
-        "deploy": "sst deploy --stage production",
+        "deploy": "sst deploy --stage production"
     },
     "allowScripts": ["npm:@nestjs/core@11.1.14", "npm:msgpackr-extract@3.0.3"]
 }
