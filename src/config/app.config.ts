@@ -95,7 +95,7 @@ export default (): AppConfig => {
 		// Converte string vazia para undefined (usar binário do @sparticuz/chromium)
 		localChromiumPath: process.env.LOCAL_CHROMIUM_PATH || undefined,
 		nodeEnv: process.env.NODE_ENV ?? "production",
-	}
+	};
 
 	return config;
 };

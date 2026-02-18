@@ -46,10 +46,10 @@ export class PuppeteerService {
 			this.logger.log({ msg: "Using local Chromium", path: localPath });
 			return localPath;
 		}
-		// chrome-aws-lambda fornece o binário para Linux (ECS/Docker)
+		// @sparticuz/chromium fornece o binário para Linux (ECS/Docker)
 		const executablePath = await chromium.executablePath();
 		this.logger.log({
-			msg: "Using chrome-aws-lambda Chromium",
+			msg: "Using @sparticuz/chromium Chromium",
 			path: executablePath,
 		});
 		return executablePath;

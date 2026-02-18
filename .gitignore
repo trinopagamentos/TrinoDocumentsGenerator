@@ -8,7 +8,5 @@ node_modules
 .claude
 
 # envs
-.env
-.env.fallback
-.env.prod
-.env.stage
+.env*
+!.env.example

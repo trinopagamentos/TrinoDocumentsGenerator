@@ -39,7 +39,11 @@
         "biome:chk": "biome check --use-editorconfig=true",
         "biome:fix": "biome check --write --use-editorconfig=true",
         "redis:local": "docker start local_redis || docker run --rm --detach --name local_redis -p 6379:6379 redis:7-alpine",
-        "sst:dev": "sst dev"
+        "sst:dev": "sst dev",
+        "deploy:stage": "sst deploy --stage stage",
+        "deploy": "sst deploy --stage production",
+        "build:stage": "./scripts/deploy-image.sh -e stage",
+        "build": "./scripts/deploy-image.sh -e prod"
     },
     "allowScripts": ["npm:@nestjs/core@11.1.14", "npm:msgpackr-extract@3.0.3"]
 }
