@@ -24,6 +24,7 @@ WORKDIR /app
 
 COPY --chown=deno:deno src src
 COPY --chown=deno:deno deno.json* .
+COPY --chown=deno:deno package.json* .
 
 # Pre-cache de dependências
 RUN deno cache src/main.ts
