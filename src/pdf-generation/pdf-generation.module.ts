@@ -31,22 +31,28 @@ import { PdfGenerationProcessor } from "@/pdf-generation/pdf-generation.processo
 		// Registra a fila com configurações dinâmicas vindas do ConfigService
 		BullModule.registerQueueAsync({
 			inject: [ConfigService],
-			useFactory: (config: ConfigService) => ({
-				name: config.get<string>("pdfGenerationQueue", "pdf-generation"),
-				defaultJobOptions: {
-					// Número máximo de tentativas antes de declarar o job como falho
-					attempts: 3,
-					backoff: {
-						// Estratégia exponencial: cada retry dobra o tempo de espera
-						type: "exponential",
-						delay: 5000, // delay inicial em ms (5s, 10s, 20s...)
+			useFactory: (config: ConfigService) => {
+				const clusterMode = config.get<boolean>("redisClusterMode");
+				return {
+					name: config.get<string>("pdfGenerationQueue", "pdf-generation"),
+					// Hash tag {bull} necessário em cluster mode: garante que todas as chaves
+					// da fila caiam no mesmo slot do Redis Cluster, evitando erro CROSSSLOT
+					...(clusterMode && { prefix: "{bull}" }),
+					defaultJobOptions: {
+						// Número máximo de tentativas antes de declarar o job como falho
+						attempts: 3,
+						backoff: {
+							// Estratégia exponencial: cada retry dobra o tempo de espera
+							type: "exponential",
+							delay: 5000, // delay inicial em ms (5s, 10s, 20s...)
+						},
+						// Limita o histórico de jobs concluídos para evitar crescimento ilimitado no Redis
+						removeOnComplete: 100,
+						// Mantém os últimos 50 jobs falhos para debugging e reprocessamento manual
+						removeOnFail: 50,
 					},
-					// Limita o histórico de jobs concluídos para evitar crescimento ilimitado no Redis
-					removeOnComplete: 100,
-					// Mantém os últimos 50 jobs falhos para debugging e reprocessamento manual
-					removeOnFail: 50,
-				},
-			}),
+				};
+			},
 		}),
 		// Importa os serviços compartilhados (PuppeteerService e S3Service)
 		SharedModule,
