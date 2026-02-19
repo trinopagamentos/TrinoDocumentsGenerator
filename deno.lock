@@ -9,8 +9,8 @@
     "jsr:@std/internal@^1.0.12": "1.0.12",
     "jsr:@std/path@^1.1.4": "1.1.4",
     "jsr:@std/testing@1": "1.0.17",
-    "npm:@aws-sdk/client-s3@*": "3.993.0",
-    "npm:@aws-sdk/client-s3@3.993.0": "3.993.0",
+    "npm:@aws-sdk/client-s3@*": "3.994.0",
+    "npm:@aws-sdk/client-s3@3.994.0": "3.994.0",
     "npm:@aws-sdk/s3-request-presigner@*": "3.992.0",
     "npm:@biomejs/biome@*": "2.4.3",
     "npm:@biomejs/biome@2.4.3": "2.4.3",
@@ -142,8 +142,8 @@
         "tslib"
       ]
     },
-    "@aws-sdk/client-s3@3.993.0": {
-      "integrity": "sha512-0slCxdbo9O3rfzqD7/PsBOrZ6vcwFzPAvGeUu5NZApI5WyjEfMLLi2T9QW8R9N9TQeUfiUQiHkg/NV0LPS61/g==",
+    "@aws-sdk/client-s3@3.994.0": {
+      "integrity": "sha512-zIVQt/XfE2zTFrcPEf8R+KRaRD1++XHMPRhxXM2kVA6NA6Aq/cFCUyYOYYwSbWLF/XeToaX1auYGn3IoZKruPQ==",
       "dependencies": [
         "@aws-crypto/sha1-browser",
         "@aws-crypto/sha256-browser",
@@ -161,9 +161,9 @@
         "@aws-sdk/middleware-ssec",
         "@aws-sdk/middleware-user-agent",
         "@aws-sdk/region-config-resolver",
-        "@aws-sdk/signature-v4-multi-region@3.993.0",
+        "@aws-sdk/signature-v4-multi-region@3.994.0",
         "@aws-sdk/types",
-        "@aws-sdk/util-endpoints",
+        "@aws-sdk/util-endpoints@3.994.0",
         "@aws-sdk/util-user-agent-browser",
         "@aws-sdk/util-user-agent-node",
         "@smithy/config-resolver",
@@ -214,7 +214,7 @@
         "@aws-sdk/middleware-user-agent",
         "@aws-sdk/region-config-resolver",
         "@aws-sdk/types",
-        "@aws-sdk/util-endpoints",
+        "@aws-sdk/util-endpoints@3.993.0",
         "@aws-sdk/util-user-agent-browser",
         "@aws-sdk/util-user-agent-node",
         "@smithy/config-resolver",
@@ -487,7 +487,7 @@
       "dependencies": [
         "@aws-sdk/core",
         "@aws-sdk/types",
-        "@aws-sdk/util-endpoints",
+        "@aws-sdk/util-endpoints@3.993.0",
         "@smithy/core",
         "@smithy/protocol-http",
         "@smithy/types",
@@ -506,7 +506,7 @@
         "@aws-sdk/middleware-user-agent",
         "@aws-sdk/region-config-resolver",
         "@aws-sdk/types",
-        "@aws-sdk/util-endpoints",
+        "@aws-sdk/util-endpoints@3.993.0",
         "@aws-sdk/util-user-agent-browser",
         "@aws-sdk/util-user-agent-node",
         "@smithy/config-resolver",
@@ -571,8 +571,8 @@
         "tslib"
       ]
     },
-    "@aws-sdk/signature-v4-multi-region@3.993.0": {
-      "integrity": "sha512-6l20k27TJdqTozJOm+s20/1XDey3aj+yaeIdbtqXuYNhQiWHajvYThcI1sHx2I1W4NelZTOmYEF+dj1mya01eg==",
+    "@aws-sdk/signature-v4-multi-region@3.994.0": {
+      "integrity": "sha512-8y04Lv497KKd7f2TVlm2RaKQaNfnY17ZH8d3m+7sW/3R3BhZvHgWQZyqTb/vcN2ERz1YAnWx6woJyB3ZNFvakw==",
       "dependencies": [
         "@aws-sdk/middleware-sdk-s3",
         "@aws-sdk/types",
@@ -609,6 +609,16 @@
     },
     "@aws-sdk/util-endpoints@3.993.0": {
       "integrity": "sha512-j6vioBeRZ4eHX4SWGvGPpwGg/xSOcK7f1GL0VM+rdf3ZFTIsUEhCFmD78B+5r2PgztcECSzEfvHQX01k8dPQPw==",
+      "dependencies": [
+        "@aws-sdk/types",
+        "@smithy/types",
+        "@smithy/url-parser",
+        "@smithy/util-endpoints",
+        "tslib"
+      ]
+    },
+    "@aws-sdk/util-endpoints@3.994.0": {
+      "integrity": "sha512-L2obUBw4ACMMd1F/SG5LdfPyZ0xJNs9Maifwr3w0uWO+4YvHmk9FfRskfSfE/SLZ9S387oSZ+1xiP7BfVCP/Og==",
       "dependencies": [
         "@aws-sdk/types",
         "@smithy/types",
@@ -2660,7 +2670,7 @@
     ],
     "packageJson": {
       "dependencies": [
-        "npm:@aws-sdk/client-s3@3.993.0",
+        "npm:@aws-sdk/client-s3@3.994.0",
         "npm:@biomejs/biome@2.4.3",
         "npm:@nestjs/bullmq@11.0.4",
         "npm:@nestjs/common@11.1.14",
