@@ -15,6 +15,7 @@ RUN apt-get update && \
     libgtk-3-0 \
     libnspr4 \
     libnss3 \
+    nodejs \
     tzdata \
     && rm -rf /var/lib/apt/lists/*
 
@@ -24,6 +25,7 @@ WORKDIR /app
 
 COPY --chown=deno:deno src src
 COPY --chown=deno:deno deno.json* .
+COPY --chown=deno:deno deno.lock* .
 COPY --chown=deno:deno package.json* .
 
 RUN deno install
