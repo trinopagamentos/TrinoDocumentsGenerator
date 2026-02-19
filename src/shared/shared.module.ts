@@ -12,8 +12,8 @@
  */
 
 import { Module } from "@nestjs/common";
-import { PuppeteerService } from "@/shared/services/puppeteer.service.ts";
-import { S3Service } from "@/shared/services/s3.service.ts";
+import { PuppeteerService } from "@/shared/services/puppeteer.service";
+import { S3Service } from "@/shared/services/s3.service";
 
 /** Lista de serviços gerenciados por este módulo (registrados e exportados) */
 const services = [PuppeteerService, S3Service];

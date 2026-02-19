@@ -12,7 +12,7 @@ import { Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import puppeteer, { type Browser, type ScreenshotOptions } from "puppeteer-core";
 import chromium from "@sparticuz/chromium";
-import type { ImageOptions, PdfOptions } from "@/pdf-generation/dto/generate-document.job.ts";
+import type { ImageOptions, PdfOptions } from "@/pdf-generation/dto/generate-document.job";
 import { Buffer } from "node:buffer";
 
 /**
@@ -156,9 +156,7 @@ export class PuppeteerService {
 
 			// Executa JavaScript no contexto do browser para obter as dimensões reais do conteúdo
 			const contentDimensions = await page.evaluate(() => {
-				// @ts-expect-error: runs in browser context where document is available
 				const w = document.body.scrollWidth;
-				// @ts-expect-error: runs in browser context where document is available
 				const h = document.body.scrollHeight;
 				return { width: w, height: h };
 			});

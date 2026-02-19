@@ -1,5 +1,37 @@
 {
-    "type": "module",
+    
+    "name": "trino-document-worker",
+    "private": true,
+    "license": "UNLICENSED",
+    "type": "commonjs",
+    "engines": {
+        "node": ">=20"
+    },
+    "scripts": {
+        "build": "nest build",
+        "start": "nest start",
+        "start:dev": "npm run start -- --watch",
+        "start:debug": "npm run start -- --debug --watch",
+        "start:prod": "node --env-file-if-exists=.env dist/main",
+        "pretest": "npm run biome:chk",
+        "test": "jest --maxWorkers=4",
+        "test:cov": "jest --coverage --maxWorkers=4",
+        "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
+        "test:e2e": "jest --config ./test/jest-e2e.json",
+        "test:watch": "jest --watch --silent=false --maxWorkers=4",
+        "dev": "npm run dev:local-tools && sst dev",
+        "dev:local-tools": "npm run redis:local",
+        "prod": "npm run start:prod",
+        "deploy:stage": "sst deploy --stage stage",
+        "deploy:build:stage": "./scripts/deploy-image.sh -e stage",
+        "deploy:prod": "sst deploy --stage production",
+        "deploy:build:prod": "./scripts/deploy-image.sh -e prod",
+        "deploy": "npm run deploy:stage",
+        "db:local": "docker start local_db || docker run --rm --detach --name local_db -p 5432:5432 -v $(pwd)/.sst/storage/postgres:/var/lib/postgresql/data -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=local_db -e POSTGRES_DB=local postgres:17.4-alpine",
+        "redis:local": "docker start local_redis || docker run --rm --detach --name local_redis -p 6379:6379 redis:7-alpine",
+        "biome:chk": "biome check --use-editorconfig=true",
+        "biome:fix": "biome check --write --use-editorconfig=true"
+    },
     "dependencies": {
         "@nestjs/common": "11.1.14",
         "@nestjs/core": "11.1.14",

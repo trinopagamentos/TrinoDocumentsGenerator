@@ -1,5 +1,5 @@
 import { assertEquals, assertThrows } from "@std/assert";
-import appConfig from "@/config/app.config.ts";
+import appConfig from "@/config/app.config";
 
 const REQUIRED_ENV: Record<string, string> = {
 	REDIS_HOST: "localhost",

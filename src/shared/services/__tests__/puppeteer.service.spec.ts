@@ -4,7 +4,7 @@ import { assertSpyCalls, stub } from "@std/testing/mock";
 import puppeteer from "puppeteer-core";
 import chromium from "@sparticuz/chromium";
 import { Buffer } from "node:buffer";
-import { PuppeteerService } from "@/shared/services/puppeteer.service.ts";
+import { PuppeteerService } from "@/shared/services/puppeteer.service";
 
 const DUMMY_EXECUTABLE = "/usr/bin/chromium-test";
 

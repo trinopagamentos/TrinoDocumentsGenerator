@@ -34,7 +34,8 @@
     },
     "tasks": {
         "start": "deno run -A --unstable-net src/main.ts",
-        "dev": "deno run -A --unstable-net --watch src/main.ts",
+        "dev:local": "deno run -A --unstable-net --watch src/main.ts",
+        "dev": "sst dev",
         "lint": "deno lint",
         "typecheck": "deno check src/main.ts",
         "test": "deno test -A",
@@ -45,7 +46,8 @@
         "build": "./scripts/deploy-image.sh -e prod",
         "sst:dev": "sst dev",
         "deploy:stage": "sst deploy --stage stage",
-        "deploy": "sst deploy --stage production"
+        "deploy:prod": "sst deploy --stage production",
+        "deploy": "sst deploy --stage stage"
     },
     "allowScripts": ["npm:@nestjs/core@11.1.14", "npm:msgpackr-extract@3.0.3"]
 }

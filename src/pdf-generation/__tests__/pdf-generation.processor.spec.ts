@@ -3,8 +3,8 @@ import { assertEquals, assertRejects } from "@std/assert";
 import { assertSpyCalls, stub } from "@std/testing/mock";
 import { Logger } from "@nestjs/common";
 import { Buffer } from "node:buffer";
-import { PdfGenerationProcessor } from "@/pdf-generation/pdf-generation.processor.ts";
-import type { GenerateDocumentJobData } from "@/pdf-generation/dto/generate-document.job.ts";
+import { PdfGenerationProcessor } from "@/pdf-generation/pdf-generation.processor";
+import type { GenerateDocumentJobData } from "@/pdf-generation/dto/generate-document.job";
 
 const FAKE_PDF_BUFFER = Buffer.from("%PDF-test");
 const FAKE_IMAGE_BUFFER = Buffer.from("PNG-test");

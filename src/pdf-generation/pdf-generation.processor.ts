@@ -10,9 +10,9 @@
 import { Logger } from "@nestjs/common";
 import { Processor, WorkerHost } from "@nestjs/bullmq";
 import { Job } from "bullmq";
-import { PuppeteerService } from "@/shared/services/puppeteer.service.ts";
-import { S3Service } from "@/shared/services/s3.service.ts";
-import type { GenerateDocumentJobData, GenerateDocumentJobResult } from "@/pdf-generation/dto/generate-document.job.ts";
+import { PuppeteerService } from "@/shared/services/puppeteer.service";
+import { S3Service } from "@/shared/services/s3.service";
+import type { GenerateDocumentJobData, GenerateDocumentJobResult } from "@/pdf-generation/dto/generate-document.job";
 
 /**
  * Consumer da fila BullMQ `pdf-generation`.

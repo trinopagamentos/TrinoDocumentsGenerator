@@ -3,7 +3,7 @@ import { assertEquals, assertRejects } from "@std/assert";
 import { assertSpyCalls, stub } from "@std/testing/mock";
 import { S3Client } from "@aws-sdk/client-s3";
 import { Buffer } from "node:buffer";
-import { S3Service } from "@/shared/services/s3.service.ts";
+import { S3Service } from "@/shared/services/s3.service";
 
 // O AWS SDK v3 inicia leituras async de ~/.aws/credentials e ~/.aws/config durante a
 // construção do S3Client. Redirecionar para /dev/null faz as leituras completarem

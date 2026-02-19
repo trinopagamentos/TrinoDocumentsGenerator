@@ -12,10 +12,11 @@
 import { Module } from "@nestjs/common";
 import { ConfigModule, ConfigService } from "@nestjs/config";
 import { BullModule } from "@nestjs/bullmq";
+import type { QueueOptions } from "bullmq";
 import { Cluster } from "ioredis";
-import appConfig from "@/config/app.config.ts";
-import { SharedModule } from "@/shared/shared.module.ts";
-import { PdfGenerationModule } from "@/pdf-generation/pdf-generation.module.ts";
+import appConfig from "@/config/app.config";
+import { SharedModule } from "@/shared/shared.module";
+import { PdfGenerationModule } from "@/pdf-generation/pdf-generation.module";
 
 /**
  * Módulo raiz que inicializa toda a árvore de dependências da aplicação.
@@ -54,7 +55,7 @@ import { PdfGenerationModule } from "@/pdf-generation/pdf-generation.module.ts";
 							...(tls && { tls: {} }),
 						},
 					});
-					return { connection };
+					return { connection } as QueueOptions;
 				}
 
 				return {

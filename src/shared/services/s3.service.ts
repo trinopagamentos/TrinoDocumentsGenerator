@@ -39,7 +39,7 @@ export class S3Service {
 	/**
 	 * @param config - ConfigService para leitura de `s3BucketName` e `awsRegion`
 	 */
-	constructor(private readonly config: ConfigService) {
+	constructor(config: ConfigService) {
 		// Lança exceção imediatamente se as configurações obrigatórias não estiverem presentes
 		this.bucket = config.getOrThrow<string>("s3BucketName");
 		this.client = new S3Client({

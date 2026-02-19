@@ -11,7 +11,7 @@
 import "reflect-metadata";
 import { NestFactory } from "@nestjs/core";
 import { Logger } from "@nestjs/common";
-import { AppModule } from "@/app.module.ts";
+import { AppModule } from "@/app.module";
 import process from "node:process";
 
 /** Logger com contexto "Bootstrap" para identificar logs da inicialização */

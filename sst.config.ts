@@ -67,7 +67,8 @@ export default $config({
 		// !   sst secret set TrinoDocWorker_RedisPassword "<password>"
 		const redisPasswordSecret = new sst.Secret(getName("RedisPassword"));
 
-		const REDIS_HOST = isProd ? REDIS_HOSTS.production : isStaging ? REDIS_HOSTS.stage : "localhost";
+		// const REDIS_HOST = isProd ? REDIS_HOSTS.production : isStaging ? REDIS_HOSTS.stage : "localhost";
+		const REDIS_HOST = "clustercfg.st-trinocoreredisv2stagecluster-snadbukh.xocefy.use1.cache.amazonaws.com";
 
 		// * ============ S3 (bucket compartilhado com o TrinoCore) ============
 		// ! O nome físico do bucket é publicado pelo TrinoCore via SSM
@@ -132,7 +133,8 @@ export default $config({
 			},
 			capacity: !isProd ? "spot" : undefined,
 			dev: {
-				command: "deno task dev",
+				// command: "deno task dev:local",
+				command: "npm run start:dev",
 			},
 			wait: isProd,
 			transform: {

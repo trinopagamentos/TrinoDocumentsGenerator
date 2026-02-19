@@ -10,3 +10,6 @@ node_modules
 # envs
 .env*
 !.env.example
+
+# build
+dist
