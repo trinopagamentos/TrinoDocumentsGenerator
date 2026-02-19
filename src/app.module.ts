@@ -12,7 +12,7 @@
 import { Module } from "@nestjs/common";
 import { ConfigModule, ConfigService } from "@nestjs/config";
 import { BullModule } from "@nestjs/bullmq";
-import type { QueueOptions } from "bullmq";
+import type { ConnectionOptions } from "bullmq";
 import { Cluster } from "ioredis";
 import appConfig from "@/config/app.config";
 import { SharedModule } from "@/shared/shared.module";
@@ -44,7 +44,8 @@ import { PdfGenerationModule } from "@/pdf-generation/pdf-generation.module";
 				const tls = config.get<boolean>("redisTls");
 				const clusterMode = config.get<boolean>("redisClusterMode");
 
-				// ElastiCache em cluster mode exige ioredis.Cluster para que os Lua scripts
+				// ElastiCache em cluster mode exige ioredis.
+				// Cluster para que os Lua scripts
 				// do BullMQ operem em keys do mesmo hash slot (evita CROSSSLOT error)
 				if (clusterMode) {
 					const connection = new Cluster([{ host, port }], {
@@ -55,7 +56,9 @@ import { PdfGenerationModule } from "@/pdf-generation/pdf-generation.module";
 							...(tls && { tls: {} }),
 						},
 					});
-					return { connection } as QueueOptions;
+					// Hash tag {bull} garante que todas as chaves da fila caiam no mesmo
+					// slot do Redis Cluster, evitando o erro CROSSSLOT
+					return { connection: connection as unknown as ConnectionOptions, prefix: "{bull}" };
 				}
 
 				return {
