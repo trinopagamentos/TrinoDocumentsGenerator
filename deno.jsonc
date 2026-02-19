@@ -45,7 +45,8 @@
         "build": "./scripts/deploy-image.sh -e prod",
         "sst:dev": "sst dev",
         "deploy:stage": "sst deploy --stage stage",
-        "deploy": "sst deploy --stage production"
+        "deploy": "sst deploy --stage production",
+        "logs:stage": "sh -c 'aws logs tail \"/sst/cluster/trino-core-stage-TrinoCoreClusterCluster-cofrkcwx/trino-doc-worker-stage-TrinoDocWorkerServiceSTAGE-fetzokhw/TrinoDocWorker_Service_STAGE\" --profile trino --region us-east-1 --follow ${2:+--since \"$2\"}' sh"
     },
     "allowScripts": ["npm:@nestjs/core@11.1.14", "npm:msgpackr-extract@3.0.3"]
 }

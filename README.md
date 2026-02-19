@@ -247,3 +247,35 @@ Conecta o worker local ao ambiente de nuvem configurado, permitindo debugar com 
 | Máximo de instâncias | 3     |
 | Scale-up por CPU     | > 70% |
 | Scale-up por memória | > 70% |
+
+## Logs
+
+Acompanhe os logs do serviço em staging via CloudWatch em tempo real com o AWS CLI.
+
+### Seguir logs em tempo real
+
+```sh
+deno task logs:stage
+```
+
+### Seguir logs a partir de um tempo atrás
+
+```sh
+deno task logs:stage -- <since>
+```
+
+O parâmetro `<since>` aceita durações relativas:
+
+| Exemplo                        | Descrição              |
+| ------------------------------ | ---------------------- |
+| `deno task logs:stage -- 30m`  | Últimos 30 minutos     |
+| `deno task logs:stage -- 1h`   | Última hora            |
+| `deno task logs:stage -- 6h`   | Últimas 6 horas        |
+| `deno task logs:stage -- 1d`   | Último dia             |
+
+> [!NOTE]\
+> Requer o perfil AWS `trino` configurado em `~/.aws/credentials` com permissão de leitura no CloudWatch Logs (`logs:FilterLogEvents`, `logs:DescribeLogStreams`).
+
+## Dúvidas e suporte
+
+Entre em contato com a Trino através do email [tecnologia@trinopagamentos.com](mailto:tecnologia@trinopagamentos.com)
