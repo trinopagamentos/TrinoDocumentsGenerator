@@ -33,6 +33,9 @@ export interface AppConfig {
 	/** Habilita TLS na conexão com o Redis (ex: ElastiCache com TLS ativo) */
 	redisTls: boolean;
 
+	/** Habilita modo cluster do Redis (ex: ElastiCache com cluster mode ativo) */
+	redisClusterMode: boolean;
+
 	/** Nome do bucket S3 onde os documentos gerados serão armazenados */
 	s3BucketName: string;
 
@@ -89,6 +92,7 @@ export default (): AppConfig => {
 		redisPassword: process.env.REDIS_PASSWORD || undefined,
 		// Interpreta a string "true" como booleano
 		redisTls: process.env.REDIS_TLS === "true",
+		redisClusterMode: process.env.REDIS_CLUSTER_MODE === "true",
 		s3BucketName: process.env.S3_BUCKET_NAME ?? "trino-doc-worker-bucket",
 		awsRegion: process.env.AWS_REGION ?? "us-east-1",
 		pdfGenerationQueue: process.env.PDF_GENERATION_QUEUE ?? "pdf-generation",

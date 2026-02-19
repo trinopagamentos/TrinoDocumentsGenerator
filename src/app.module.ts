@@ -12,6 +12,7 @@
 import { Module } from "@nestjs/common";
 import { ConfigModule, ConfigService } from "@nestjs/config";
 import { BullModule } from "@nestjs/bullmq";
+import { Cluster } from "ioredis";
 import appConfig from "@/config/app.config.ts";
 import { SharedModule } from "@/shared/shared.module.ts";
 import { PdfGenerationModule } from "@/pdf-generation/pdf-generation.module.ts";
@@ -35,16 +36,36 @@ import { PdfGenerationModule } from "@/pdf-generation/pdf-generation.module.ts";
 		// Configura o BullMQ com as credenciais do Redis vindas do ConfigService
 		BullModule.forRootAsync({
 			inject: [ConfigService],
-			useFactory: (config: ConfigService) => ({
-				connection: {
-					host: config.getOrThrow<string>("redisHost"),
-					port: config.getOrThrow<number>("redisPort"),
-					// Inclui a senha apenas se estiver definida no ambiente
-					...(config.get<string>("redisPassword") && { password: config.get<string>("redisPassword") }),
-					// Habilita TLS somente quando REDIS_TLS=true
-					...(config.get<boolean>("redisTls") && { tls: {} }),
-				},
-			}),
+			useFactory: (config: ConfigService) => {
+				const host = config.getOrThrow<string>("redisHost");
+				const port = config.getOrThrow<number>("redisPort");
+				const password = config.get<string>("redisPassword");
+				const tls = config.get<boolean>("redisTls");
+				const clusterMode = config.get<boolean>("redisClusterMode");
+
+				// ElastiCache em cluster mode exige ioredis.Cluster para que os Lua scripts
+				// do BullMQ operem em keys do mesmo hash slot (evita CROSSSLOT error)
+				if (clusterMode) {
+					const connection = new Cluster([{ host, port }], {
+						// Necessário para ElastiCache: resolve endereços DNS diretamente
+						dnsLookup: (address, callback) => callback(null, address),
+						redisOptions: {
+							...(password && { password }),
+							...(tls && { tls: {} }),
+						},
+					});
+					return { connection };
+				}
+
+				return {
+					connection: {
+						host,
+						port,
+						...(password && { password }),
+						...(tls && { tls: {} }),
+					},
+				};
+			},
 		}),
 
 		// Módulo com serviços compartilhados (PuppeteerService, S3Service)

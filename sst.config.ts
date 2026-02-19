@@ -117,6 +117,7 @@ export default $config({
 				REDIS_HOST,
 				REDIS_PORT: "6379",
 				REDIS_TLS: isCloud ? "true" : "false",
+				REDIS_CLUSTER_MODE: isCloud ? "true" : "false",
 				...(isCloud && { REDIS_PASSWORD: redisPasswordSecret.value }),
 				S3_BUCKET_NAME: bucket.name,
 				AWS_REGION: "us-east-1",
