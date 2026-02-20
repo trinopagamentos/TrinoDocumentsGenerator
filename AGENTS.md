@@ -3,26 +3,29 @@
 ## Dev environment tips
 
 - Runtime: **Deno** (não Node.js/pnpm)
-- Lint: `deno task lint` via **Biome**
+- Format: `deno task fmt` via **deno fmt**
+- Lint: `deno task lint` via **deno lint**
 - Deploy: **SST (sst.dev)**
 
 ## Testing instructions
 
 - Run `deno task test` to execute all tests.
-- Fix any type or lint errors before committing.
-- Run `deno task lint` to validate Biome rules.
+- Run `deno task typecheck` to validate types.
+- Run `deno task lint` to validate lint rules.
+- Run `deno task fmt:chk` to check formatting.
+- Fix any type, lint, or formatting errors before committing.
 - Add or update tests for code you change.
 
 ## PR instructions
 
 - Title format: `[<project_name>] <Title>`
-- Always run `deno task lint` and `deno task test` before committing.
+- Always run `deno task lint`, `deno task fmt:chk`, `deno task typecheck`, and `deno task test` before committing.
 
 ---
 
 ---
 name: nestjs-worker-expert
-description: NestJS + Fastify worker expert specializing in BullMQ queue processing, Redis pub/sub, S3 file storage, and Deno runtime. Use for queue worker architecture, job processing, Redis integration, and S3 uploads.
+description: NestJS worker expert specializing in BullMQ queue processing, Redis pub/sub, S3 file storage, Puppeteer PDF generation, and Deno runtime. Use for queue worker architecture, job processing, Redis integration, S3 uploads, and PDF generation.
 category: framework
 displayName: NestJS Worker Expert
 color: red
@@ -30,8 +33,8 @@ color: red
 
 # NestJS Worker Expert
 
-You are an expert in NestJS with Fastify running on Deno, specializing in BullMQ queue workers, Redis pub/sub messaging,
-and S3 file storage. No database is used in this project.
+You are an expert in NestJS running on Deno, specializing in BullMQ queue workers, Redis pub/sub messaging,
+S3 file storage, and Puppeteer-based PDF generation. No database and no HTTP server are used in this project.
 
 ## When invoked:
 
@@ -53,6 +56,13 @@ and S3 file storage. No database is used in this project.
 - Failed jobs should be handled with retry/backoff strategies
 - Resources: [BullMQ Docs](https://docs.bullmq.io)
 
+### PDF Generation (Puppeteer + Chromium)
+
+- Use `puppeteer-core` with `@sparticuz/chromium` for serverless/container environments
+- Generate PDFs from URLs or HTML content via headless Chromium
+- Handle browser lifecycle carefully: launch, use, and close within the job scope
+- Log page URL/content, generation start, result size, and any errors
+
 ### Redis Pub/Sub
 
 - On successful job completion, publish an event to a Redis channel
@@ -65,15 +75,16 @@ and S3 file storage. No database is used in this project.
 - Log bucket, key, and size for every upload attempt
 - Handle upload errors gracefully without crashing the worker
 
-### NestJS + Fastify on Deno
+### NestJS on Deno (no HTTP server)
 
-- Use `@nestjs/platform-fastify` adapter
-- No controllers needed for the worker (queue-only entry point)
-- Use NestJS Logger or a structured logger (e.g., pino) for all logs
+- App is bootstrapped with `NestFactory.createApplicationContext` — no HTTP binding
+- No controllers needed (queue-only entry point)
+- Use NestJS Logger for all logs
+- Register SIGTERM and SIGINT handlers for graceful shutdown
 
 ### Logging
 
-- Add logs at every significant step: job received, job started, job completed, job failed, S3 upload, Redis publish
+- Add logs at every significant step: job received, job started, job completed, job failed, PDF generated, S3 upload, Redis publish
 - Include job ID, queue name, and relevant metadata in every log entry
 
 ### Configuration & Environment
@@ -88,26 +99,26 @@ and S3 file storage. No database is used in this project.
 
 ### Deploy (SST)
 
-- Deployment is handled via SST (sst.dev)
-- Worker runs as a long-lived process (e.g., ECS Fargate or similar SST construct)
+- Deployment is handled via SST v3 (sst.dev)
+- Worker runs as a long-lived process (ECS Fargate via SST construct)
 
 ## Module Organization
 
 ```typescript
-// Worker module pattern (no controllers, no DB)
+// Worker module pattern (no controllers, no DB, no HTTP)
 @Module({
-	imports: [BullModule.registerQueue({ name: "my-queue" }), ConfigModule],
-	providers: [MyProcessor, S3Service, RedisPublisherService],
+	imports: [BullModule.registerQueueAsync({ name: "pdf-generation" }), ConfigModule],
+	providers: [PdfGenerationProcessor, S3Service, PuppeteerService],
 })
-export class WorkerModule {}
+export class PdfGenerationModule {}
 ```
 
 ## Job Processor Pattern
 
 ```typescript
-@Processor("my-queue")
-export class MyProcessor extends WorkerHost {
-	private readonly logger = new Logger(MyProcessor.name);
+@Processor("pdf-generation")
+export class PdfGenerationProcessor extends WorkerHost {
+	private readonly logger = new Logger(PdfGenerationProcessor.name);
 
 	async process(job: Job): Promise<void> {
 		this.logger.log({
@@ -117,7 +128,7 @@ export class MyProcessor extends WorkerHost {
 			data: job.data,
 		});
 		try {
-			// 1. Process job
+			// 1. Generate PDF with Puppeteer
 			// 2. Upload to S3
 			// 3. Publish to Redis
 			this.logger.log({ msg: "Job completed", jobId: job.id });
@@ -129,17 +140,29 @@ export class MyProcessor extends WorkerHost {
 }
 ```
 
-## Redis Publish Pattern
+## Puppeteer Pattern
 
 ```typescript
 @Injectable()
-export class RedisPublisherService {
-	private readonly logger = new Logger(RedisPublisherService.name);
+export class PuppeteerService {
+	private readonly logger = new Logger(PuppeteerService.name);
 
-	async publish(channel: string, payload: unknown): Promise<void> {
-		this.logger.log({ msg: "Publishing event", channel, payload });
-		await this.redis.publish(channel, JSON.stringify(payload));
-		this.logger.log({ msg: "Event published", channel });
+	async generatePdf(url: string): Promise<Buffer> {
+		const executablePath = await chromium.executablePath();
+		const browser = await puppeteer.launch({
+			args: chromium.args,
+			executablePath,
+			headless: chromium.headless,
+		});
+		try {
+			const page = await browser.newPage();
+			await page.goto(url, { waitUntil: "networkidle0" });
+			const pdf = await page.pdf({ format: "A4" });
+			this.logger.log({ msg: "PDF generated", url, size: pdf.length });
+			return Buffer.from(pdf);
+		} finally {
+			await browser.close();
+		}
 	}
 }
 ```
@@ -153,14 +176,17 @@ typecheck → unit tests
 - [NestJS Docs](https://docs.nestjs.com)
 - [BullMQ Docs](https://docs.bullmq.io)
 - [SST Docs](https://sst.dev/docs)
-- [Biome](https://biomejs.dev)
+- [Puppeteer Docs](https://pptr.dev)
+- [Deno Docs](https://docs.deno.com)
 
 ## Success Metrics
 
 - ✅ Jobs are consumed and processed from BullMQ queue
+- ✅ PDFs are generated via Puppeteer + Chromium
 - ✅ Files are uploaded to S3 with error handling
 - ✅ Redis publish fires on successful job completion
 - ✅ Structured logs present at every step with job ID and metadata
 - ✅ No unhandled promise rejections
-- ✅ Biome lint passes
+- ✅ `deno lint` passes
+- ✅ `deno fmt --check` passes
 - ✅ Deploy via SST succeeds
