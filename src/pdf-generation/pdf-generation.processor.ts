@@ -66,10 +66,9 @@ export class PdfGenerationProcessor extends WorkerHost {
 
 		try {
 			// Etapa 1: renderizar o HTML em buffer binário (PDF ou imagem)
-			const buffer =
-				job.data.documentType === "pdf"
-					? await this.puppeteerService.generatePdf(job.data.htmlContent, job.data.pdfOptions)
-					: await this.puppeteerService.generateImage(job.data.htmlContent, job.data.imageOptions);
+			const buffer = job.data.documentType === "pdf"
+				? await this.puppeteerService.generatePdf(job.data.htmlContent, job.data.pdfOptions)
+				: await this.puppeteerService.generateImage(job.data.htmlContent, job.data.imageOptions);
 
 			this.logger.log({
 				msg: "Document generated",

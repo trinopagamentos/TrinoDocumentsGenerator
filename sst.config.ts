@@ -132,7 +132,7 @@ export default $config({
 			},
 			capacity: !isProd ? "spot" : undefined,
 			dev: {
-				command: "deno task dev",
+				command: "deno task start:watch",
 			},
 			wait: isProd,
 			transform: {

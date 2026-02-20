@@ -28,7 +28,7 @@ jobs:
         run: deno install
 
       - name: Format
-        run: deno task biome:chk
+        run: deno task fmt:chk
 
       - name: Lint
         run: deno task lint

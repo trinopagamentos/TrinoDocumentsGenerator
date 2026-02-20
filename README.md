@@ -1,6 +1,7 @@
 # TrinoDocWorker
 
-Worker assíncrono de geração de documentos da plataforma Trino. Consome jobs de uma fila BullMQ (Redis), renderiza HTML em PDF ou imagem via Puppeteer/Chromium headless e armazena o resultado no AWS S3.
+Worker assíncrono de geração de documentos da plataforma Trino. Consome jobs de uma fila BullMQ (Redis), renderiza HTML
+em PDF ou imagem via Puppeteer/Chromium headless e armazena o resultado no AWS S3.
 
 ## Visão geral
 
@@ -10,7 +11,7 @@ TrinoCore (API)  →  Redis (BullMQ)  →  TrinoDocWorker  →  AWS S3
                            queue           Chromium
 ```
 
-O worker **não expõe nenhuma porta HTTP**.  
+O worker **não expõe nenhuma porta HTTP**.\
 É um consumer puro que roda como um serviço ECS sem load balancer.
 
 ## Stack
@@ -76,7 +77,7 @@ src/
 deno task redis:local
 ```
 
-Inicia um contêiner Redis 7 (Alpine) na porta `6379`.  
+Inicia um contêiner Redis 7 (Alpine) na porta `6379`.\
 Na próxima execução, reutiliza o contêiner existente.
 
 ### 2. Configure as variáveis de ambiente
@@ -89,9 +90,17 @@ Renomeie o arquivo `.env.example` para `.env`.
 # Modo produção (uma execução)
 deno task start
 
-# Modo desenvolvimento (reinicia ao salvar arquivos)
+# Modo watch local (reinicia ao salvar arquivos, sem SST)
+deno task start:watch
+```
+
+### Modo desenvolvimento com SST
+
+```sh
 deno task dev
 ```
+
+Conecta o worker local ao ambiente de nuvem configurado, permitindo debugar com filas e S3 reais.
 
 ### Outros comandos úteis
 
@@ -99,8 +108,8 @@ deno task dev
 deno task lint          # Linting via Deno
 deno task typecheck     # Checagem de tipos TypeScript
 deno task test          # Executa os testes
-deno task biome:chk     # Verifica formatação/linting com Biome
-deno task biome:fix     # Corrige formatação/linting com Biome
+deno task fmt           # Formata o código com deno fmt
+deno task fmt:chk       # Verifica a formatação sem aplicar correções
 ```
 
 ## Fila e contrato de jobs
@@ -171,12 +180,11 @@ O projeto usa [SST v3](https://sst.dev) para provisionar a infraestrutura na AWS
 
 ### Ambientes
 
-| Stage          | Redis             | ECS Cluster       | Spot |
-| -------------- | ----------------- | ----------------- | ---- |
-| `production`   | ElastiCache (TLS) | TrinoCore Cluster | Não  |
-| `stage`        | ElastiCache (TLS) | TrinoCore Cluster | Sim  |
-| `{user_dev}`   | Redis local       | —                 | —    |
-
+| Stage        | Redis             | ECS Cluster       | Spot |
+| ------------ | ----------------- | ----------------- | ---- |
+| `production` | ElastiCache (TLS) | TrinoCore Cluster | Não  |
+| `stage`      | ElastiCache (TLS) | TrinoCore Cluster | Sim  |
+| `{user_dev}` | Redis local       | —                 | —    |
 
 ### Configurar o secret do Redis antes do primeiro deploy
 
@@ -222,22 +230,14 @@ O arquivo `.env` é atualizado com a versão resolvida para que o `sst deploy` u
 ### Deploy em staging
 
 ```sh
-sst deploy --stage stage
+deno task deploy:stage
 ```
 
 ### Deploy em produção
 
 ```sh
-sst deploy --stage production
+deno task deploy
 ```
-
-### Modo desenvolvimento com SST
-
-```sh
-deno task sst:dev
-```
-
-Conecta o worker local ao ambiente de nuvem configurado, permitindo debugar com filas e S3 reais.
 
 ### Scaling (produção)
 
@@ -250,31 +250,37 @@ Conecta o worker local ao ambiente de nuvem configurado, permitindo debugar com 
 
 ## Logs
 
-Acompanhe os logs do serviço em staging via CloudWatch em tempo real com o AWS CLI.
+Acompanhe os logs do serviço via CloudWatch em tempo real com o AWS CLI.
 
 ### Seguir logs em tempo real
 
 ```sh
+# Staging
 deno task logs:stage
+
+# Produção
+deno task logs:prod
 ```
 
 ### Seguir logs a partir de um tempo atrás
 
 ```sh
 deno task logs:stage -- <since>
+deno task logs:prod -- <since>
 ```
 
 O parâmetro `<since>` aceita durações relativas:
 
-| Exemplo                        | Descrição              |
-| ------------------------------ | ---------------------- |
-| `deno task logs:stage -- 30m`  | Últimos 30 minutos     |
-| `deno task logs:stage -- 1h`   | Última hora            |
-| `deno task logs:stage -- 6h`   | Últimas 6 horas        |
-| `deno task logs:stage -- 1d`   | Último dia             |
+| Exemplo                       | Descrição          |
+| ----------------------------- | ------------------ |
+| `deno task logs:stage -- 30m` | Últimos 30 minutos |
+| `deno task logs:stage -- 1h`  | Última hora        |
+| `deno task logs:stage -- 6h`  | Últimas 6 horas    |
+| `deno task logs:stage -- 1d`  | Último dia         |
 
 > [!NOTE]\
-> Requer o perfil AWS `trino` configurado em `~/.aws/credentials` com permissão de leitura no CloudWatch Logs (`logs:FilterLogEvents`, `logs:DescribeLogStreams`).
+> Requer o perfil AWS `trino` configurado em `~/.aws/credentials` com permissão de leitura no CloudWatch Logs
+> (`logs:FilterLogEvents`, `logs:DescribeLogStreams`).
 
 ## Dúvidas e suporte
 

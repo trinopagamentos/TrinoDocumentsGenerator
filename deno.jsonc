@@ -1,52 +1,61 @@
 {
-    "fmt": {
-        "useTabs": true,
-        "indentWidth": 4,
-        "lineWidth": 160,
-        "semiColons": true,
-        "singleQuote": true,
-        "proseWrap": "always",
-        "include": ["src/"]
-    },
-    "unstable": ["net"],
     "compilerOptions": {
         "experimentalDecorators": true,
         "emitDecoratorMetadata": true
     },
-    "imports": {
-        "@biomejs/biome": "npm:@biomejs/biome",
-        "@nestjs/common": "npm:@nestjs/common",
-        "@nestjs/core": "npm:@nestjs/core",
-        "@nestjs/bullmq": "npm:@nestjs/bullmq",
-        "@nestjs/config": "npm:@nestjs/config",
-        "bullmq": "npm:bullmq",
-        "puppeteer-core": "npm:puppeteer-core",
-        "@sparticuz/chromium": "npm:@sparticuz/chromium",
-        "@aws-sdk/client-s3": "npm:@aws-sdk/client-s3",
-        "@aws-sdk/s3-request-presigner": "npm:@aws-sdk/s3-request-presigner",
-        "ioredis": "npm:ioredis",
-        "reflect-metadata": "npm:reflect-metadata",
-        "rxjs": "npm:rxjs",
-        "sst": "npm:sst",
-        "@std/assert": "jsr:@std/assert@^1",
-        "@std/testing": "jsr:@std/testing@^1",
-        "@/": "./src/"
+    "fmt": {
+        "useTabs": true,
+        "indentWidth": 4,
+        "lineWidth": 120,
+        "semiColons": true,
+        "singleQuote": false,
+        "proseWrap": "always",
+        "include": ["src/", "*.md"]
     },
+    "lint": {
+        "include": ["src/"],
+        "rules": {
+            "tags": ["recommended"],
+            "include": [
+                "no-inferrable-types"
+            ]
+        }
+    },
+    "unstable": ["net"],
+    "nodeModulesDir": "auto",
+    "imports": {
+        "@/": "./src/",
+        "@aws-sdk/client-s3": "npm:@aws-sdk/client-s3@3.994.0",
+        "@nestjs/bullmq": "npm:@nestjs/bullmq@11.0.4",
+        "@nestjs/common": "npm:@nestjs/common@11.1.14",
+        "@nestjs/config": "npm:@nestjs/config@4.0.3",
+        "@nestjs/core": "npm:@nestjs/core@11.1.14",
+        "@sparticuz/chromium": "npm:@sparticuz/chromium@143.0.4",
+        "@std/assert": "jsr:@std/assert@1.0.19",
+        "@std/testing": "jsr:@std/testing@1.0.17",
+        "bullmq": "npm:bullmq@5.69.3",
+        "ioredis": "npm:ioredis@5.9.3",
+        "puppeteer-core": "npm:puppeteer-core@24.37.5",
+        "reflect-metadata": "npm:reflect-metadata@0.2.2",
+        "rxjs": "npm:rxjs@7.8.2",
+        "sst": "npm:sst@3.19.0"
+    },
+    "allowScripts": ["npm:@nestjs/core@11.1.14"],
     "tasks": {
+        "dev": "sst dev",
         "start": "deno run -A --unstable-net src/main.ts",
-        "dev": "deno run -A --unstable-net --watch src/main.ts",
+        "start:watch": "deno run -A --unstable-net --watch src/main.ts",
+        "fmt": "deno fmt",
+        "fmt:chk": "deno fmt --check",
         "lint": "deno lint",
         "typecheck": "deno check src/main.ts",
         "test": "deno test -A",
-        "biome:chk": "biome check --use-editorconfig=true",
-        "biome:fix": "biome check --write --use-editorconfig=true",
         "redis:local": "docker start local_redis || docker run --rm --detach --name local_redis -p 6379:6379 redis:7-alpine",
         "build:stage": "./scripts/deploy-image.sh -e stage",
         "build": "./scripts/deploy-image.sh -e prod",
-        "sst:dev": "sst dev",
         "deploy:stage": "sst deploy --stage stage",
         "deploy": "sst deploy --stage production",
-        "logs:stage": "sh -c 'aws logs tail \"/sst/cluster/trino-core-stage-TrinoCoreClusterCluster-cofrkcwx/trino-doc-worker-stage-TrinoDocWorkerServiceSTAGE-fetzokhw/TrinoDocWorker_Service_STAGE\" --profile trino --region us-east-1 --follow ${2:+--since \"$2\"}' sh"
-    },
-    "allowScripts": ["npm:@nestjs/core@11.1.14", "npm:msgpackr-extract@3.0.3"]
+        "logs:stage": "sh -c 'aws logs tail \"/sst/cluster/trino-core-stage-TrinoCoreClusterCluster-cofrkcwx/trino-doc-worker-stage-TrinoDocWorkerServiceSTAGE-fetzokhw/TrinoDocWorker_Service_STAGE\" --profile trino --region us-east-1 --follow ${2:+--since \"$2\"}' sh",
+        "logs:prod": "sh -c 'aws logs tail \"/sst/cluster/trino-core-production-TrinoCoreClusterCluster-bchmhrtf/trino-doc-worker-production-TrinoDocWorkerService-zkxwvtvx/TrinoDocWorker_Service\" --profile trino --region us-east-1 --follow ${2:+--since \"$2\"}' sh"
+    }
 }

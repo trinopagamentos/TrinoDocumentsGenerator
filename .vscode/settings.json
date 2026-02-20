@@ -1,9 +1,5 @@
 {
 	"deno.enable": true,
 	"deno.unstable": ["net"],
-	"deno.config": "./deno.jsonc",
-	"editor.defaultFormatter": "biomejs.biome",
-	"[typescript]": {
-		"editor.defaultFormatter": "biomejs.biome"
-	}
+	"deno.config": "./deno.jsonc"
 }
