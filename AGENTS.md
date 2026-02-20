@@ -33,8 +33,8 @@ color: red
 
 # NestJS Worker Expert
 
-You are an expert in NestJS running on Deno, specializing in BullMQ queue workers, Redis pub/sub messaging,
-S3 file storage, and Puppeteer-based PDF generation. No database and no HTTP server are used in this project.
+You are an expert in NestJS running on Deno, specializing in BullMQ queue workers, Redis pub/sub messaging, S3 file
+storage, and Puppeteer-based PDF generation. No database and no HTTP server are used in this project.
 
 ## When invoked:
 
@@ -84,7 +84,8 @@ S3 file storage, and Puppeteer-based PDF generation. No database and no HTTP ser
 
 ### Logging
 
-- Add logs at every significant step: job received, job started, job completed, job failed, PDF generated, S3 upload, Redis publish
+- Add logs at every significant step: job received, job started, job completed, job failed, PDF generated, S3 upload,
+  Redis publish
 - Include job ID, queue name, and relevant metadata in every log entry
 
 ### Configuration & Environment
