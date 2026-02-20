@@ -5,6 +5,7 @@ ARG NODE_ENV=production
 
 ENV TZ=$TZ
 ENV NODE_ENV=$NODE_ENV
+ENV TINI_SUBREAPER=1
 
 # Dependências do Chromium no Linux
 RUN apt-get update && \
