@@ -18,13 +18,13 @@ O worker **não expõe nenhuma porta HTTP**.\
 
 | Tecnologia                                                                      | Versão | Função                             |
 | ------------------------------------------------------------------------------- | ------ | ---------------------------------- |
-| [Deno](https://deno.com)                                                        | 2.6.10 | Runtime TypeScript                 |
+| [Deno](https://deno.com)                                                        | 2.7.7  | Runtime TypeScript                 |
 | [NestJS](https://nestjs.com)                                                    | 11     | Framework / DI / ciclo de vida     |
 | [BullMQ](https://docs.bullmq.io)                                                | 5      | Consumo de filas Redis             |
 | [Puppeteer Core](https://pptr.dev)                                              | 24     | Renderização headless              |
 | [@sparticuz/chromium](https://github.com/Sparticuz/chromium)                    | 143    | Binário Chromium para Linux/Docker |
 | [AWS SDK S3](https://docs.aws.amazon.com/AWSJavaScriptSDK/v3/latest/client/s3/) | 3      | Upload de arquivos                 |
-| [SST](https://sst.dev)                                                          | 3      | Infraestrutura como código (IaC)   |
+| [SST](https://sst.dev)                                                          | 4      | Infraestrutura como código (IaC)   |
 
 ## Estrutura do projeto
 
