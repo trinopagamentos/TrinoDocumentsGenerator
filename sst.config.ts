@@ -30,7 +30,7 @@ const vpsSecurityGroup = "sg-008bd8b15d6fd793e";
 // Endpoints do ElastiCache Redis (cluster mode, TLS obrigatório)
 const REDIS_HOSTS = {
 	production: "clustercfg.product-trinocoreredisv2cluster-fbathhrz.xocefy.use1.cache.amazonaws.com",
-	stage: "clustercfg.st-trinocoreredisv2stagecluster-snadbukh.xocefy.use1.cache.amazonaws.com",
+	stage: "clustercfg.st-trinocoreredisv2stagecluster-owmdofdh.xocefy.use1.cache.amazonaws.com",
 };
 
 const protectedStages = ["production", "stage"];
