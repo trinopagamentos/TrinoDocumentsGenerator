@@ -16,3 +16,6 @@ bin
 
 # build
 dist
+
+# docker
+.dockerignore

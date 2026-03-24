@@ -10,6 +10,7 @@ const vpcId = "vpc-0ab2766d24f135104";
 const publicSubnets = ["subnet-0e48564b4ebf17019", "subnet-0202cc44fb2076fa3", "subnet-03d3af5f8e16ac6ad"];
 const privateSubnets = ["subnet-0d13602f7ce20b220", "subnet-0b3ded358aa66ad2e", "subnet-09a398774aabf81d4"];
 const vpsSecurityGroup = "sg-008bd8b15d6fd793e";
+// const redisSecurityGroup = "sg-008bd8b15d6fd793e";
 
 /**
  * Configurações de ambiente:
@@ -79,8 +80,8 @@ export default $config({
 
 		// * ============ ECS Cluster (reutiliza o cluster do TrinoCore) ============
 		const clusterArn = isProd ? TRINO_CORE_CLUSTER_ARN.production : TRINO_CORE_CLUSTER_ARN.stage;
-
-		const cluster = sst.aws.Cluster.get(getName("Cluster"), {
+		const clusterName = getName("Cluster");
+		const cluster = sst.aws.Cluster.get(clusterName, {
 			id: clusterArn,
 			vpc: {
 				id: vpcId,
@@ -105,7 +106,7 @@ export default $config({
 		}
 
 		// * ============ Worker Service (sem load balancer — consumer puro) ============
-		const workerName = isProd ? getName("Service") : getName("Service_STAGE");
+		const workerName = getName("Service");
 		const worker = new sst.aws.Service(workerName, {
 			image,
 			cluster,
@@ -130,13 +131,13 @@ export default $config({
 				cpuUtilization: 70,
 				memoryUtilization: 70,
 			},
-			capacity: !isProd ? "spot" : undefined,
+			capacity: isProd ? undefined : "spot", // usar "spot" é mais barato para testes e desenvolvimento
 			dev: {
 				command: "deno task start:watch",
 			},
 			wait: isProd,
 			transform: {
-				service(args) {
+				service(args: aws.ecs.ServiceArgs) {
 					args.networkConfiguration = {
 						...args.networkConfiguration,
 						assignPublicIp: true,
@@ -147,7 +148,7 @@ export default $config({
 		});
 
 		return {
-			worker: worker.urn,
+			worker: (worker as $util.ComponentResource).urn,
 			isProd,
 			image: image ?? "image not defined",
 			redis: REDIS_HOST,
