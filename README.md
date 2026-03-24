@@ -80,11 +80,36 @@ deno task redis:local
 Inicia um contêiner Redis 7 (Alpine) na porta `6379`.\
 Na próxima execução, reutiliza o contêiner existente.
 
-### 2. Configure as variáveis de ambiente
+### 2. Instale o Chromium localmente
 
-Renomeie o arquivo `.env.example` para `.env`.
+Em desenvolvimento, o worker usa um binário Chromium local em vez do `@sparticuz/chromium` (otimizado para
+Lambda/Docker). Instale-o via `@puppeteer/browsers`:
 
-### 3. Execute o worker
+```sh
+npx @puppeteer/browsers install chrome-headless-shell@143 --path ~/.cache/puppeteer
+```
+
+Após a instalação, o comando exibirá o caminho do executável, algo como:
+
+```
+chrome-headless-shell@143 /Users/<seu-usuario>/.cache/puppeteer/chrome-headless-shell/mac_arm-143.0.7499.192/chrome-headless-shell-mac-arm64/chrome-headless-shell
+```
+
+Copie esse caminho e defina-o como `LOCAL_CHROMIUM_PATH` no seu `.env` (veja o passo seguinte).
+
+> [!TIP]\
+> Para listar os binários já instalados e obter o caminho novamente, execute:\
+> `npx @puppeteer/browsers list --path ~/.cache/puppeteer`
+
+### 3. Configure as variáveis de ambiente
+
+Renomeie o arquivo `.env.example` para `.env` e defina `LOCAL_CHROMIUM_PATH` com o caminho obtido no passo anterior:
+
+```sh
+LOCAL_CHROMIUM_PATH="/Users/<seu-usuario>/.cache/puppeteer/chrome/mac_arm-134.0.6998.35/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing"
+```
+
+### 4. Execute o worker
 
 ```sh
 # Modo produção (uma execução)
