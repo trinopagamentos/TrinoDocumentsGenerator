@@ -201,7 +201,7 @@ pdf-generation
 
 ## Deploy (SST)
 
-O projeto usa [SST v3](https://sst.dev) para provisionar a infraestrutura na AWS.
+O projeto usa [SST](https://sst.dev) para provisionar a infraestrutura na AWS.
 
 ### Ambientes
 
