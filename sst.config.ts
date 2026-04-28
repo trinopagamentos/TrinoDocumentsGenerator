@@ -7,8 +7,8 @@ const getName = (...args: string[]) => [WORKER_BASE_NAME, ...args].join("_");
 
 // VPC da Trino (compartilhada com o TrinoCore — criada manualmente na AWS)
 const vpcId = "vpc-0ab2766d24f135104";
-const publicSubnets = ["subnet-0e48564b4ebf17019", "subnet-0202cc44fb2076fa3", "subnet-03d3af5f8e16ac6ad"];
-const privateSubnets = ["subnet-0d13602f7ce20b220", "subnet-0b3ded358aa66ad2e", "subnet-09a398774aabf81d4"];
+// const publicSubnets = ["subnet-0e48564b4ebf17019", "subnet-0202cc44fb2076fa3", "subnet-03d3af5f8e16ac6ad"];
+// const privateSubnets = ["subnet-0d13602f7ce20b220", "subnet-0b3ded358aa66ad2e", "subnet-09a398774aabf81d4"];
 const vpsSecurityGroup = "sg-008bd8b15d6fd793e";
 // const redisSecurityGroup = "sg-008bd8b15d6fd793e";
 
@@ -33,10 +33,10 @@ const REDIS_HOSTS = {
 	stage: "clustercfg.t-stage-trinocoreredisv2cluster-badzbwfz.xocefy.use1.cache.amazonaws.com",
 };
 
-const redisSecurityGroup = "sg-008bd8b15d6fd793e";
+// const redisSecurityGroup = "sg-008bd8b15d6fd793e";
 const publicSubnetsByStage = {
 	production: ["subnet-0202cc44fb2076fa3", "subnet-0e48564b4ebf17019", "subnet-03d3af5f8e16ac6ad"],
-	stage: ["subnet-024d8604eda430324", "subnet-0da0dac7506bea59d", "subnet-0b3ded358aa66ad2e"],
+	stage: ["subnet-0202cc44fb2076fa3", "subnet-0e48564b4ebf17019", "subnet-03d3af5f8e16ac6ad"],
 }
 
 const privateSubnetsByStage = {
