@@ -33,6 +33,17 @@ const REDIS_HOSTS = {
 	stage: "clustercfg.t-stage-trinocoreredisv2cluster-badzbwfz.xocefy.use1.cache.amazonaws.com",
 };
 
+const redisSecurityGroup = "sg-008bd8b15d6fd793e";
+const publicSubnetsByStage = {
+	production: ["subnet-0202cc44fb2076fa3", "subnet-0e48564b4ebf17019", "subnet-03d3af5f8e16ac6ad"],
+	stage: ["subnet-0202cc44fb2076fa3", "subnet-0e48564b4ebf17019", "subnet-03d3af5f8e16ac6ad"],
+}
+
+const privateSubnetsByStage = {
+	production: ["subnet-09a398774aabf81d4", "subnet-0d13602f7ce20b220"],
+	stage: ["subnet-024d8604eda430324", "subnet-0da0dac7506bea59d", "subnet-0b3ded358aa66ad2e"],
+}
+
 const protectedStages = ["production", "stage"];
 
 // ARN do cluster ECS do TrinoCore (reutilizado pelo worker para economizar recursos)
@@ -80,6 +91,9 @@ export default $config({
 
 		// * ============ ECS Cluster (reutiliza o cluster do TrinoCore) ============
 		const clusterArn = isProd ? TRINO_CORE_CLUSTER_ARN.production : TRINO_CORE_CLUSTER_ARN.stage;
+		const publicSubnets = isProd ? publicSubnetsByStage.production : publicSubnetsByStage.stage;
+		const privateSubnets = isProd ? privateSubnetsByStage.production : privateSubnetsByStage.stage;
+
 		const clusterName = getName("Cluster");
 		const cluster = sst.aws.Cluster.get(clusterName, {
 			id: clusterArn,
@@ -87,7 +101,7 @@ export default $config({
 				id: vpcId,
 				securityGroups: [vpsSecurityGroup],
 				loadBalancerSubnets: [...publicSubnets],
-				containerSubnets: [...publicSubnets, ...privateSubnets],
+				containerSubnets: [...privateSubnets],
 			},
 		});
 
