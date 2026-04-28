@@ -25,23 +25,23 @@
     "nodeModulesDir": "auto",
     "imports": {
         "@/": "./src/",
-        "@aws-sdk/client-s3": "npm:@aws-sdk/client-s3@3.1015.0",
+        "@aws-sdk/client-s3": "npm:@aws-sdk/client-s3@3.1038.0",
         "@nestjs/bullmq": "npm:@nestjs/bullmq@11.0.4",
-        "@nestjs/common": "npm:@nestjs/common@11.1.17",
-        "@nestjs/config": "npm:@nestjs/config@4.0.3",
-        "@nestjs/core": "npm:@nestjs/core@11.1.17",
-        "@sparticuz/chromium": "npm:@sparticuz/chromium@143.0.4",
+        "@nestjs/common": "npm:@nestjs/common@11.1.19",
+        "@nestjs/config": "npm:@nestjs/config@4.0.4",
+        "@nestjs/core": "npm:@nestjs/core@11.1.19",
+        "@sparticuz/chromium": "npm:@sparticuz/chromium@148.0.0",
         "@std/assert": "jsr:@std/assert@1.0.19",
-        "@std/testing": "jsr:@std/testing@1.0.17",
-        "bullmq": "npm:bullmq@5.71.0",
+        "@std/testing": "jsr:@std/testing@1.0.18",
+        "bullmq": "npm:bullmq@5.76.2",
         "ioredis": "npm:ioredis@5.10.1",
-        "puppeteer-core": "npm:puppeteer-core@24.40.0",
+        "puppeteer-core": "npm:puppeteer-core@24.42.0",
         "reflect-metadata": "npm:reflect-metadata@0.2.2",
         "rxjs": "npm:rxjs@7.8.2",
-        "sst": "npm:sst@^4.12.3"
+        "sst": "npm:sst@4.12.3"
     },
     "allowScripts": {
-        "allow": ["npm:@nestjs/core@11.1.17"],
+        "allow": ["npm:@nestjs/core@11.1.19"],
         "deny": ["npm:msgpackr-extract@3.0.3"]
     },
     "tasks": {
