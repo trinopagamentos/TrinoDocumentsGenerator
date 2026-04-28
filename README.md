@@ -307,6 +307,55 @@ O parâmetro `<since>` aceita durações relativas:
 > Requer o perfil AWS `trino` configurado em `~/.aws/credentials` com permissão de leitura no CloudWatch Logs
 > (`logs:FilterLogEvents`, `logs:DescribeLogStreams`).
 
+## Atualizar endpoints do Redis (ElastiCache)
+
+Quando os clusters do ElastiCache forem recriados, os endpoints mudam e precisam ser atualizados em [sst.config.ts](sst.config.ts) na constante `REDIS_HOSTS`.
+
+### Descobrir os novos endpoints
+
+Use o AWS CLI com o perfil `trino` para listar todos os replication groups e seus configuration endpoints:
+
+```sh
+# Produção — filtra pelo padrão do cluster de produção
+aws elasticache describe-replication-groups \
+  --profile trino \
+  --region us-east-1 \
+  --query 'ReplicationGroups[?contains(ReplicationGroupId, `product`) && contains(ReplicationGroupId, `redis`)].{Id:ReplicationGroupId, Endpoint:ConfigurationEndpoint.Address}' \
+  --output table
+
+# Staging — filtra pelo padrão do cluster de staging
+aws elasticache describe-replication-groups \
+  --profile trino \
+  --region us-east-1 \
+  --query 'ReplicationGroups[?contains(ReplicationGroupId, `sta`) && contains(ReplicationGroupId, `redis`)].{Id:ReplicationGroupId, Endpoint:ConfigurationEndpoint.Address}' \
+  --output table
+```
+
+Ou liste todos de uma vez e identifique pelos IDs:
+
+```sh
+aws elasticache describe-replication-groups \
+  --profile trino \
+  --region us-east-1 \
+  --query 'ReplicationGroups[*].{Id:ReplicationGroupId, Endpoint:ConfigurationEndpoint.Address}' \
+  --output table
+```
+
+### Atualizar o sst.config.ts
+
+Com os novos endpoints em mãos, atualize a constante `REDIS_HOSTS` em [sst.config.ts](sst.config.ts):
+
+```typescript
+const REDIS_HOSTS = {
+  production: "<novo-endpoint-production>",
+  stage: "<novo-endpoint-stage>",
+};
+```
+
+> [!NOTE]\
+> Os endpoints seguem o padrão `clustercfg.<nome-do-cluster>.<id>.use1.cache.amazonaws.com`.\
+> Requer o perfil AWS `trino` configurado em `~/.aws/credentials` com permissão `elasticache:DescribeReplicationGroups`.
+
 ## Dúvidas e suporte
 
 Entre em contato com a Trino através do email [tecnologia@trinopagamentos.com](mailto:tecnologia@trinopagamentos.com)
