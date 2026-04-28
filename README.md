@@ -309,7 +309,8 @@ O parâmetro `<since>` aceita durações relativas:
 
 ## Atualizar endpoints do Redis (ElastiCache)
 
-Quando os clusters do ElastiCache forem recriados, os endpoints mudam e precisam ser atualizados em [sst.config.ts](sst.config.ts) na constante `REDIS_HOSTS`.
+Quando os clusters do ElastiCache forem recriados, os endpoints mudam e precisam ser atualizados em
+[sst.config.ts](sst.config.ts) na constante `REDIS_HOSTS`.
 
 ### Descobrir os novos endpoints
 
@@ -347,14 +348,61 @@ Com os novos endpoints em mãos, atualize a constante `REDIS_HOSTS` em [sst.conf
 
 ```typescript
 const REDIS_HOSTS = {
-  production: "<novo-endpoint-production>",
-  stage: "<novo-endpoint-stage>",
+	production: "<novo-endpoint-production>",
+	stage: "<novo-endpoint-stage>",
 };
 ```
 
 > [!NOTE]\
 > Os endpoints seguem o padrão `clustercfg.<nome-do-cluster>.<id>.use1.cache.amazonaws.com`.\
 > Requer o perfil AWS `trino` configurado em `~/.aws/credentials` com permissão `elasticache:DescribeReplicationGroups`.
+
+### Descobrir a senha do Redis
+
+A senha é gerenciada pelo SST e pode estar no **SSM Parameter Store** ou no **Secrets Manager**. Use os comandos abaixo
+para localizá-la.
+
+**1. Buscar no SSM Parameter Store:**
+
+```sh
+aws ssm get-parameters-by-path \
+  --profile trino \
+  --region us-east-1 \
+  --path "/sst/trino-doc-worker" \
+  --recursive \
+  --with-decryption \
+  --query 'Parameters[*].{Name:Name,Value:Value}' \
+  --output table
+```
+
+**2. Se não encontrar no SSM, buscar no Secrets Manager:**
+
+```sh
+# Listar os secrets disponíveis
+aws secretsmanager list-secrets \
+  --profile trino \
+  --region us-east-1 \
+  --query 'SecretList[*].Name' \
+  --output json
+
+# Recuperar o valor do secret encontrado
+aws secretsmanager get-secret-value \
+  --profile trino \
+  --region us-east-1 \
+  --secret-id "<nome-do-secret>" \
+  --query 'SecretString' \
+  --output text
+```
+
+Com a senha em mãos, atualize o secret no SST para o ambiente desejado:
+
+```sh
+# Stage
+npx sst secret set TrinoDocWorker_RedisPassword "<password>" --stage stage
+
+# Produção
+npx sst secret set TrinoDocWorker_RedisPassword "<password>" --stage production
+```
 
 ## Dúvidas e suporte
 

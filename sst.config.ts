@@ -36,7 +36,7 @@ const REDIS_HOSTS = {
 const redisSecurityGroup = "sg-008bd8b15d6fd793e";
 const publicSubnetsByStage = {
 	production: ["subnet-0202cc44fb2076fa3", "subnet-0e48564b4ebf17019", "subnet-03d3af5f8e16ac6ad"],
-	stage: ["subnet-0202cc44fb2076fa3", "subnet-0e48564b4ebf17019", "subnet-03d3af5f8e16ac6ad"],
+	stage: ["subnet-024d8604eda430324", "subnet-0da0dac7506bea59d", "subnet-0b3ded358aa66ad2e"],
 }
 
 const privateSubnetsByStage = {
@@ -154,7 +154,7 @@ export default $config({
 				service(args: aws.ecs.ServiceArgs) {
 					args.networkConfiguration = {
 						...args.networkConfiguration,
-						assignPublicIp: true,
+						assignPublicIp: false,
 						subnets: [...publicSubnets, ...privateSubnets],
 					};
 				},
