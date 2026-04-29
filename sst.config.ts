@@ -131,7 +131,9 @@ export default $config({
 				REDIS_CLUSTER_MODE: isCloud ? "true" : "false",
 				...(isCloud && { REDIS_PASSWORD: redisPasswordSecret.value }),
 				REDIS_URL: isCloud
-					? $interpolate`rediss://:${redisPasswordSecret.value}@${REDIS_HOST}:6379`
+					? redisPasswordSecret.value.apply(
+						(pwd: string) => `rediss://:${encodeURIComponent(pwd)}@${REDIS_HOST}:6379`,
+					)
 					: "redis://localhost:6379",
 				S3_BUCKET_NAME: bucket.name,
 				AWS_REGION: "us-east-1",
