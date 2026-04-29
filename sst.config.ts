@@ -101,48 +101,6 @@ export default $config({
 			},
 		});
 
-		// * ============ S3 VPC Gateway Endpoint ============
-		// Roteia tráfego S3 diretamente dentro da rede AWS sem passar pelo NAT Gateway.
-		// Um Gateway Endpoint é único por serviço por VPC — verificamos se já existe antes
-		// de criar. Associamos as route tables de TODAS as subnets privadas (DocWorker e
-		// TrinoCore compartilham a mesma VPC e se beneficiam do mesmo endpoint).
-		if (isCloud) {
-			const allPrivateSubnetIds = [
-				...new Set([
-					...privateSubnetsByStage.production,
-					...privateSubnetsByStage.stage,
-					// Subnets privadas do TrinoCore (mesma VPC — vpc-0ab2766d24f135104)
-					"subnet-0d13602f7ce20b220",
-					"subnet-0b3ded358aa66ad2e",
-					"subnet-09a398774aabf81d4",
-				]),
-			];
-
-			const existingEndpoint = await aws.ec2.getVpcEndpoint({
-				vpcId,
-				serviceName: "com.amazonaws.us-east-1.s3",
-			}).catch(() => null);
-
-			if (!existingEndpoint) {
-				const routeTables = await Promise.all(
-					allPrivateSubnetIds.map((subnetId) => aws.ec2.getRouteTable({ subnetId })),
-				);
-				const routeTableIds = [...new Set(routeTables.map((rt: { id: string }) => rt.id))];
-
-				new aws.ec2.VpcEndpoint("TrinoS3GatewayEndpoint", {
-					vpcId,
-					serviceName: "com.amazonaws.us-east-1.s3",
-					vpcEndpointType: "Gateway",
-					routeTableIds,
-				}, {
-					// Gateway Endpoint é um recurso compartilhado de VPC —
-					// proteger contra delete acidental e manter mesmo se a stack for destruída.
-					protect: true,
-					retainOnDelete: true,
-				});
-			}
-		}
-
 		// * ============ Worker image ============
 		let image: string | undefined;
 		let version = "dev";
@@ -172,6 +130,9 @@ export default $config({
 				REDIS_TLS: isCloud ? "true" : "false",
 				REDIS_CLUSTER_MODE: isCloud ? "true" : "false",
 				...(isCloud && { REDIS_PASSWORD: redisPasswordSecret.value }),
+				REDIS_URL: isCloud
+					? $interpolate`rediss://:${redisPasswordSecret.value}@${REDIS_HOST}:6379`
+					: "redis://localhost:6379",
 				S3_BUCKET_NAME: bucket.name,
 				AWS_REGION: "us-east-1",
 				PDF_GENERATION_QUEUE: "pdf-generation",
