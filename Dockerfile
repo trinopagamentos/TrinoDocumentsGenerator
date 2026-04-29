@@ -1,4 +1,4 @@
-FROM denoland/deno:2.7.7
+FROM denoland/deno:2.7.13
 
 ARG TZ=America/Sao_Paulo
 ARG NODE_ENV=production

@@ -18,11 +18,11 @@ O worker **não expõe nenhuma porta HTTP**.\
 
 | Tecnologia                                                                      | Versão | Função                             |
 | ------------------------------------------------------------------------------- | ------ | ---------------------------------- |
-| [Deno](https://deno.com)                                                        | 2.7.7  | Runtime TypeScript                 |
+| [Deno](https://deno.com)                                                        | 2.7.13 | Runtime TypeScript                 |
 | [NestJS](https://nestjs.com)                                                    | 11     | Framework / DI / ciclo de vida     |
 | [BullMQ](https://docs.bullmq.io)                                                | 5      | Consumo de filas Redis             |
 | [Puppeteer Core](https://pptr.dev)                                              | 24     | Renderização headless              |
-| [@sparticuz/chromium](https://github.com/Sparticuz/chromium)                    | 143    | Binário Chromium para Linux/Docker |
+| [@sparticuz/chromium](https://github.com/Sparticuz/chromium)                    | 147    | Binário Chromium para Linux/Docker |
 | [AWS SDK S3](https://docs.aws.amazon.com/AWSJavaScriptSDK/v3/latest/client/s3/) | 3      | Upload de arquivos                 |
 | [SST](https://sst.dev)                                                          | 4      | Infraestrutura como código (IaC)   |
 
@@ -43,6 +43,8 @@ src/
 │   ├── services/
 │   |    ├── puppeteer.service.ts       # Geração de PDF e imagem via Chromium headless
 │   |    └── s3.service.ts              # Upload de arquivos no AWS S3
+│   ├── utils/
+│   |    └── bullmq-connection.util.ts  # Fábrica de conexão BullMQ (standalone e cluster Redis)
 │   └── shared.module.ts                # Módulo compartilhado
 |
 ├── app.module.ts                       # Módulo raiz (ConfigModule + BullModule)
@@ -51,17 +53,14 @@ src/
 
 ## Variáveis de ambiente
 
-| Variável               | Obrigatória | Padrão           | Descrição                                      |
-| ---------------------- | ----------- | ---------------- | ---------------------------------------------- |
-| `REDIS_HOST`           | Sim         | —                | Host do servidor Redis                         |
-| `REDIS_PORT`           | Não         | `6379`           | Porta do Redis                                 |
-| `REDIS_PASSWORD`       | Não         | —                | Senha do Redis (ElastiCache em produção)       |
-| `REDIS_TLS`            | Não         | `false`          | Habilita TLS na conexão Redis (`true`/`false`) |
-| `S3_BUCKET_NAME`       | Sim         | —                | Nome do bucket S3 de destino                   |
-| `AWS_REGION`           | Sim         | —                | Região AWS do bucket S3                        |
-| `PDF_GENERATION_QUEUE` | Não         | `pdf-generation` | Nome da fila BullMQ                            |
-| `LOCAL_CHROMIUM_PATH`  | Não         | —                | Caminho local do Chromium (desenvolvimento)    |
-| `NODE_ENV`             | Não         | `production`     | Ambiente de execução                           |
+| Variável               | Obrigatória | Padrão                   | Descrição                                                                                          |
+| ---------------------- | ----------- | ------------------------ | -------------------------------------------------------------------------------------------------- |
+| `REDIS_URL`            | Não         | `redis://localhost:6379` | URL de conexão Redis. Use `redis://` para standalone ou `rediss://` para cluster TLS (ElastiCache) |
+| `S3_BUCKET_NAME`       | Sim         | —                        | Nome do bucket S3 de destino                                                                       |
+| `AWS_REGION`           | Sim         | —                        | Região AWS do bucket S3                                                                            |
+| `PDF_GENERATION_QUEUE` | Não         | `pdf-generation`         | Nome da fila BullMQ                                                                                |
+| `LOCAL_CHROMIUM_PATH`  | Não         | —                        | Caminho local do Chromium (desenvolvimento)                                                        |
+| `NODE_ENV`             | Não         | `production`             | Ambiente de execução                                                                               |
 
 ## Desenvolvimento local
 
@@ -86,13 +85,13 @@ Em desenvolvimento, o worker usa um binário Chromium local em vez do `@sparticu
 Lambda/Docker). Instale-o via `@puppeteer/browsers`:
 
 ```sh
-npx @puppeteer/browsers install chrome-headless-shell@143 --path ~/.cache/puppeteer
+npx @puppeteer/browsers install chrome-headless-shell@147 --path ~/.cache/puppeteer
 ```
 
 Após a instalação, o comando exibirá o caminho do executável, algo como:
 
 ```
-chrome-headless-shell@143 /Users/<seu-usuario>/.cache/puppeteer/chrome-headless-shell/mac_arm-143.0.7499.192/chrome-headless-shell-mac-arm64/chrome-headless-shell
+chrome-headless-shell@147 /Users/<seu-usuario>/.cache/puppeteer/chrome-headless-shell/mac_arm-147.0.7727.117/chrome-headless-shell-mac-arm64/chrome-headless-shell
 ```
 
 Copie esse caminho e defina-o como `LOCAL_CHROMIUM_PATH` no seu `.env` (veja o passo seguinte).
@@ -106,7 +105,14 @@ Copie esse caminho e defina-o como `LOCAL_CHROMIUM_PATH` no seu `.env` (veja o p
 Renomeie o arquivo `.env.example` para `.env` e defina `LOCAL_CHROMIUM_PATH` com o caminho obtido no passo anterior:
 
 ```sh
-LOCAL_CHROMIUM_PATH="/Users/<seu-usuario>/.cache/puppeteer/chrome/mac_arm-134.0.6998.35/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing"
+# Redis local (standalone)
+REDIS_URL=redis://localhost:6379
+
+# S3 (obrigatório)
+S3_BUCKET_NAME=<nome-do-bucket>
+AWS_REGION=us-east-1
+
+LOCAL_CHROMIUM_PATH="/Users/<seu-usuario>/.cache/puppeteer/chrome-headless-shell/mac_arm-147.0.7727.117/chrome-headless-shell-mac-arm64/chrome-headless-shell"
 ```
 
 ### 4. Execute o worker
@@ -163,7 +169,7 @@ pdf-generation
   };
   imageOptions?: {
     type?: "png" | "jpeg" | "webp";        // padrão: "png"
-    quality?: number;                      // 0–100, apenas jpeg/webp
+    quality?: number;                      // 0–100, apenas jpeg/webp; padrão: 80
     fullPage?: boolean;                    // padrão: true (apenas no modo fallback)
     width?: number;                        // padrão: 320
     height?: number;                       // padrão: 1080
@@ -191,13 +197,15 @@ pdf-generation
 
 ### Políticas de retry
 
-| Configuração            | Valor                       |
-| ----------------------- | --------------------------- |
-| Tentativas máximas      | 3                           |
-| Estratégia de backoff   | Exponencial                 |
-| Delay inicial           | 5 segundos (5s → 10s → 20s) |
-| Jobs concluídos retidos | 100                         |
-| Jobs com falha retidos  | 50                          |
+| Configuração              | Valor                 |
+| ------------------------- | --------------------- |
+| Tentativas máximas        | 2                     |
+| Estratégia de backoff     | Exponencial           |
+| Delay inicial             | 5 segundos (5s → 10s) |
+| Jobs concluídos retidos   | 1 000 (máx 24 horas)  |
+| Jobs com falha retidos    | Máx 7 dias            |
+| Lock duration (Puppeteer) | 5 minutos             |
+| Max stalled count         | 1                     |
 
 ## Deploy (SST)
 

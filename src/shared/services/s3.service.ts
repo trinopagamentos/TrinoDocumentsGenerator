@@ -8,7 +8,9 @@
 
 import { Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
-import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { S3Client } from "@aws-sdk/client-s3";
+import { Upload } from "@aws-sdk/lib-storage";
+import { FetchHttpHandler } from "@smithy/fetch-http-handler";
 import { Buffer } from "node:buffer";
 
 /**
@@ -42,8 +44,11 @@ export class S3Service {
 	constructor(private readonly config: ConfigService) {
 		// Lança exceção imediatamente se as configurações obrigatórias não estiverem presentes
 		this.bucket = config.getOrThrow<string>("s3BucketName");
+		// FetchHttpHandler usa o fetch nativo do Deno em vez do módulo https do Node.js,
+		// evitando o timeout causado pelo reuso de sockets na camada de compat Node do Deno.
 		this.client = new S3Client({
 			region: config.getOrThrow<string>("awsRegion"),
+			requestHandler: new FetchHttpHandler({ requestTimeout: 120_000 }),
 		});
 	}
 
@@ -61,34 +66,41 @@ export class S3Service {
 	 * @throws Propaga erros do SDK AWS em caso de falha de autenticação, permissão ou rede
 	 */
 	async upload(key: string, buffer: Buffer, documentType: "pdf" | "image"): Promise<string> {
-		// Determina o Content-Type com base no tipo de documento
 		const contentType = documentType === "pdf" ? "application/pdf" : "image/png";
+		const kb = Math.round(buffer.length / 1024);
 
 		this.logger.log({
-			msg: "Uploading to S3",
+			msg: "S3 upload start",
 			bucket: this.bucket,
 			key,
 			bytes: buffer.length,
+			kb,
 			contentType,
 		});
 
-		// Monta e envia o comando de upload via PutObject
-		const command = new PutObjectCommand({
-			Bucket: this.bucket,
-			Key: key,
-			Body: buffer,
-			ContentType: contentType,
+		const t0 = Date.now();
+
+		const upload = new Upload({
+			client: this.client,
+			params: {
+				Bucket: this.bucket,
+				Key: key,
+				Body: buffer,
+				ContentType: contentType,
+			},
 		});
 
-		await this.client.send(command);
+		await upload.done();
 
-		// Constrói a URL pública no formato padrão do S3 (path-style virtual-hosted)
+		const elapsedMs = Date.now() - t0;
 		const url = `https://${this.bucket}.s3.amazonaws.com/${key}`;
 
 		this.logger.log({
-			msg: "S3 upload successful",
+			msg: "S3 upload success",
 			bucket: this.bucket,
 			key,
+			kb,
+			elapsedMs,
 			url,
 		});
 

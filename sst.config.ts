@@ -7,10 +7,7 @@ const getName = (...args: string[]) => [WORKER_BASE_NAME, ...args].join("_");
 
 // VPC da Trino (compartilhada com o TrinoCore — criada manualmente na AWS)
 const vpcId = "vpc-0ab2766d24f135104";
-// const publicSubnets = ["subnet-0e48564b4ebf17019", "subnet-0202cc44fb2076fa3", "subnet-03d3af5f8e16ac6ad"];
-// const privateSubnets = ["subnet-0d13602f7ce20b220", "subnet-0b3ded358aa66ad2e", "subnet-09a398774aabf81d4"];
 const vpsSecurityGroup = "sg-008bd8b15d6fd793e";
-// const redisSecurityGroup = "sg-008bd8b15d6fd793e";
 
 /**
  * Configurações de ambiente:
@@ -90,10 +87,9 @@ export default $config({
 		const bucket = sst.aws.Bucket.get(getName("Bucket"), trinoBucketName);
 
 		// * ============ ECS Cluster (reutiliza o cluster do TrinoCore) ============
-		const clusterArn = isProd ? TRINO_CORE_CLUSTER_ARN.production : TRINO_CORE_CLUSTER_ARN.stage;
 		const publicSubnets = isProd ? publicSubnetsByStage.production : publicSubnetsByStage.stage;
 		const privateSubnets = isProd ? privateSubnetsByStage.production : privateSubnetsByStage.stage;
-
+		const clusterArn = isProd ? TRINO_CORE_CLUSTER_ARN.production : TRINO_CORE_CLUSTER_ARN.stage;
 		const clusterName = getName("Cluster");
 		const cluster = sst.aws.Cluster.get(clusterName, {
 			id: clusterArn,
@@ -104,6 +100,48 @@ export default $config({
 				containerSubnets: [...privateSubnets],
 			},
 		});
+
+		// * ============ S3 VPC Gateway Endpoint ============
+		// Roteia tráfego S3 diretamente dentro da rede AWS sem passar pelo NAT Gateway.
+		// Um Gateway Endpoint é único por serviço por VPC — verificamos se já existe antes
+		// de criar. Associamos as route tables de TODAS as subnets privadas (DocWorker e
+		// TrinoCore compartilham a mesma VPC e se beneficiam do mesmo endpoint).
+		if (isCloud) {
+			const allPrivateSubnetIds = [
+				...new Set([
+					...privateSubnetsByStage.production,
+					...privateSubnetsByStage.stage,
+					// Subnets privadas do TrinoCore (mesma VPC — vpc-0ab2766d24f135104)
+					"subnet-0d13602f7ce20b220",
+					"subnet-0b3ded358aa66ad2e",
+					"subnet-09a398774aabf81d4",
+				]),
+			];
+
+			const existingEndpoint = await aws.ec2.getVpcEndpoint({
+				vpcId,
+				serviceName: "com.amazonaws.us-east-1.s3",
+			}).catch(() => null);
+
+			if (!existingEndpoint) {
+				const routeTables = await Promise.all(
+					allPrivateSubnetIds.map((subnetId) => aws.ec2.getRouteTable({ subnetId })),
+				);
+				const routeTableIds = [...new Set(routeTables.map((rt: { id: string }) => rt.id))];
+
+				new aws.ec2.VpcEndpoint("TrinoS3GatewayEndpoint", {
+					vpcId,
+					serviceName: "com.amazonaws.us-east-1.s3",
+					vpcEndpointType: "Gateway",
+					routeTableIds,
+				}, {
+					// Gateway Endpoint é um recurso compartilhado de VPC —
+					// proteger contra delete acidental e manter mesmo se a stack for destruída.
+					protect: true,
+					retainOnDelete: true,
+				});
+			}
+		}
 
 		// * ============ Worker image ============
 		let image: string | undefined;

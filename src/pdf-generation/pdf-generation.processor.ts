@@ -26,7 +26,13 @@ import type { GenerateDocumentJobData, GenerateDocumentJobResult } from "@/pdf-g
  * a política de retry/backoff configurada no {@link PdfGenerationModule}.
  * Após esgotar as tentativas, o job é movido para a Dead Letter Queue (DLQ).
  */
-@Processor("pdf-generation")
+@Processor("pdf-generation", {
+	// Default lockDuration is 30s — too short for heavy Puppeteer renders.
+	// If the lock expires the job is re-queued while still running, causing
+	// duplicate S3 uploads and stale-connection timeouts.
+	lockDuration: 300_000,
+	maxStalledCount: 1,
+})
 export class PdfGenerationProcessor extends WorkerHost {
 	private readonly logger = new Logger(PdfGenerationProcessor.name);
 
