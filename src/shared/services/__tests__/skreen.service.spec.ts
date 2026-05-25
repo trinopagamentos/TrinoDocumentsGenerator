@@ -9,12 +9,10 @@ const PNG_BYTES = new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10]); // PNG head
 function makeService(overrides?: {
 	renderPdf?: (opts: SkreenOptions) => Promise<Uint8Array>;
 	renderImage?: (opts: SkreenOptions) => Promise<Uint8Array>;
-	withTailwind?: (html: string) => Promise<string>;
 }): SkreenService {
 	const service = new SkreenService();
 	if (overrides?.renderPdf) service["_renderPdf"] = overrides.renderPdf;
 	if (overrides?.renderImage) service["_renderImage"] = overrides.renderImage;
-	if (overrides?.withTailwind) service["_withTailwind"] = overrides.withTailwind;
 	return service;
 }
 
@@ -58,40 +56,6 @@ Deno.test("SkreenService.generatePdf: repassa opções corretamente para o rende
 	assertEquals(captured?.width, 800);
 	assertEquals(captured?.height, 600);
 	assertEquals(captured?.scale, 1.5);
-});
-
-Deno.test("SkreenService.generatePdf: chama withTailwind quando withTailwind: true", async () => {
-	const processed = "<html><style>.foo{}</style></html>";
-	let tailwindCalled = false;
-
-	const service = makeService({
-		renderPdf: (opts) => {
-			assertEquals(opts.data, processed);
-			return Promise.resolve(PDF_BYTES);
-		},
-		withTailwind: (html) => {
-			tailwindCalled = true;
-			assertEquals(html, "<html></html>");
-			return Promise.resolve(processed);
-		},
-	});
-
-	await service.generatePdf("<html></html>", { withTailwind: true });
-	assertEquals(tailwindCalled, true);
-});
-
-Deno.test("SkreenService.generatePdf: não chama withTailwind quando withTailwind: false", async () => {
-	let tailwindCalled = false;
-	const service = makeService({
-		renderPdf: () => Promise.resolve(PDF_BYTES),
-		withTailwind: () => {
-			tailwindCalled = true;
-			return Promise.resolve("");
-		},
-	});
-
-	await service.generatePdf("<html></html>", { withTailwind: false });
-	assertEquals(tailwindCalled, false);
 });
 
 Deno.test("SkreenService.generatePdf: propaga erros do renderer", async () => {
@@ -140,26 +104,6 @@ Deno.test("SkreenService.generateImage: repassa opções corretamente para o ren
 	assertEquals(captured?.width, 400);
 	assertEquals(captured?.height, 300);
 	assertEquals(captured?.scale, 1.0);
-});
-
-Deno.test("SkreenService.generateImage: chama withTailwind quando withTailwind: true", async () => {
-	const processed = "<html><style>.bar{}</style></html>";
-	let tailwindCalled = false;
-
-	const service = makeService({
-		renderImage: (opts) => {
-			assertEquals(opts.data, processed);
-			return Promise.resolve(PNG_BYTES);
-		},
-		withTailwind: (html) => {
-			tailwindCalled = true;
-			assertEquals(html, "<html></html>");
-			return Promise.resolve(processed);
-		},
-	});
-
-	await service.generateImage("<html></html>", { withTailwind: true });
-	assertEquals(tailwindCalled, true);
 });
 
 Deno.test("SkreenService.generateImage: propaga erros do renderer", async () => {

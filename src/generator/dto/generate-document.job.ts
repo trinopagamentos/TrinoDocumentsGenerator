@@ -42,14 +42,6 @@ export interface PdfOptions {
 	 * Complementa a fonte Inter embutida por padrão.
 	 */
 	fonts?: Uint8Array[];
-
-	/**
-	 * Quando `true`, pré-processa o HTML com Tailwind CSS v4 antes de renderizar,
-	 * substituindo a CDN `@tailwindcss/browser` por um `<style>` inline gerado no servidor.
-	 * Necessário porque o renderer WASM não executa JavaScript.
-	 * @defaultValue false
-	 */
-	withTailwind?: boolean;
 }
 
 /**
@@ -85,14 +77,6 @@ export interface ImageOptions {
 	 * Complementa a fonte Inter embutida por padrão.
 	 */
 	fonts?: Uint8Array[];
-
-	/**
-	 * Quando `true`, pré-processa o HTML com Tailwind CSS v4 antes de renderizar,
-	 * substituindo a CDN `@tailwindcss/browser` por um `<style>` inline gerado no servidor.
-	 * Necessário porque o renderer WASM não executa JavaScript.
-	 * @defaultValue false
-	 */
-	withTailwind?: boolean;
 }
 
 /**
