@@ -137,7 +137,7 @@ export default $config({
 					: "redis://localhost:6379",
 				S3_BUCKET_NAME: bucket.name,
 				AWS_REGION: "us-east-1",
-				PDF_GENERATION_QUEUE: "pdf-generation",
+				GENERATOR_QUEUE: "generator",
 				LOCAL_CHROMIUM_PATH: isCloud ? "" : (process.env?.LOCAL_CHROMIUM_PATH ?? ""),
 			},
 			scaling: {

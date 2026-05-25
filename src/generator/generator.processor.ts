@@ -1,6 +1,6 @@
 /**
- * @file pdf-generation.processor.ts
- * @description Processor BullMQ responsável por consumir e processar os jobs da fila `pdf-generation`.
+ * @file generator.processor.ts
+ * @description Processor BullMQ responsável por consumir e processar os jobs da fila `generator`.
  *
  * Cada job contém um HTML pré-renderizado e metadados do documento. O processor
  * delega a renderização ao {@link SkreenService} e o armazenamento ao
@@ -12,10 +12,10 @@ import { Processor, WorkerHost } from "@nestjs/bullmq";
 import { Job } from "bullmq";
 import { SkreenService } from "@/shared/services/skreen.service.ts";
 import { S3Service } from "@/shared/services/s3.service.ts";
-import type { GenerateDocumentJobData, GenerateDocumentJobResult } from "@/pdf-generation/dto/generate-document.job.ts";
+import type { GenerateDocumentJobData, GenerateDocumentJobResult } from "@/generator/dto/generate-document.job.ts";
 
 /**
- * Consumer da fila BullMQ `pdf-generation`.
+ * Consumer da fila BullMQ `generator`.
  *
  * Estende {@link WorkerHost} para integrar-se ao ciclo de vida gerenciado
  * pelo NestJS BullMQ. O método `process` é invocado automaticamente pelo
@@ -23,15 +23,15 @@ import type { GenerateDocumentJobData, GenerateDocumentJobResult } from "@/pdf-g
  *
  * @remarks
  * Em caso de erro, a exceção é relançada para que o BullMQ possa aplicar
- * a política de retry/backoff configurada no {@link PdfGenerationModule}.
+ * a política de retry/backoff configurada no {@link GeneratorModule}.
  * Após esgotar as tentativas, o job é movido para a Dead Letter Queue (DLQ).
  */
-@Processor("pdf-generation", {
+@Processor("generator", {
 	lockDuration: 300_000,
 	maxStalledCount: 1,
 })
-export class PdfGenerationProcessor extends WorkerHost {
-	private readonly logger = new Logger(PdfGenerationProcessor.name);
+export class GeneratorProcessor extends WorkerHost {
+	private readonly logger = new Logger(GeneratorProcessor.name);
 
 	/**
 	 * @param skreenService - Serviço responsável por renderizar HTML em PDF ou imagem

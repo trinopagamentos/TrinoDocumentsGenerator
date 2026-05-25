@@ -70,12 +70,12 @@ Deno.test("appConfig: REDIS_URL customizado é preservado", () => {
 	});
 });
 
-Deno.test("appConfig: pdfGenerationQueue usa padrão 'pdf-generation' e aceita valor customizado", () => {
+Deno.test("appConfig: generatorQueue usa padrão 'generator' e aceita valor customizado", () => {
 	withEnv({}, () => {
-		assertEquals(appConfig().pdfGenerationQueue, "pdf-generation");
+		assertEquals(appConfig().generatorQueue, "generator");
 	});
 
-	withEnv({ PDF_GENERATION_QUEUE: "minha-fila" }, () => {
-		assertEquals(appConfig().pdfGenerationQueue, "minha-fila");
+	withEnv({ GENERATOR_QUEUE: "minha-fila" }, () => {
+		assertEquals(appConfig().generatorQueue, "minha-fila");
 	});
 });

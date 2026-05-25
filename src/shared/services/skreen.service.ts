@@ -10,7 +10,7 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { skreen, skreenPdf, withTailwind } from "@tadashi/skreen";
 import type { SkreenOptions } from "@tadashi/skreen";
-import type { ImageOptions, PdfOptions } from "@/pdf-generation/dto/generate-document.job.ts";
+import type { ImageOptions, PdfOptions } from "@/generator/dto/generate-document.job.ts";
 
 /**
  * Serviço injetável que gerencia a renderização WASM via Skreen.

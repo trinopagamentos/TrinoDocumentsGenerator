@@ -7,7 +7,7 @@ em PDF ou imagem via `@tadashi/skreen` (renderer WASM em Rust/Blitz/Vello) e arm
 
 ```
 TrinoCore (API)  →  Redis (BullMQ)  →  TrinoDocWorker  →  AWS S3
-                      pdf-generation       @tadashi/skreen
+                        generator          @tadashi/skreen
                            queue           (WASM renderer)
 ```
 
@@ -32,11 +32,11 @@ src/
 ├── config/
 │   └── app.config.ts                   # Factory de configuração + validação de env vars
 |
-├── pdf-generation/
+├── generator/
 │   ├── dto/
 │   |   └── generate-document.job.ts    # Interfaces de entrada e saída dos jobs
-│   ├── pdf-generation.module.ts        # Registro da fila com políticas de retry
-│   └── pdf-generation.processor.ts     # Consumer BullMQ (pipeline: render → upload → result)
+│   ├── generator.module.ts             # Registro da fila com políticas de retry
+│   └── generator.processor.ts          # Consumer BullMQ (pipeline: render → upload → result)
 |
 ├── shared/
 │   ├── services/
@@ -52,13 +52,13 @@ src/
 
 ## Variáveis de ambiente
 
-| Variável               | Obrigatória | Padrão                   | Descrição                                                                                          |
-| ---------------------- | ----------- | ------------------------ | -------------------------------------------------------------------------------------------------- |
-| `REDIS_URL`            | Não         | `redis://localhost:6379` | URL de conexão Redis. Use `redis://` para standalone ou `rediss://` para cluster TLS (ElastiCache) |
-| `S3_BUCKET_NAME`       | Sim         | —                        | Nome do bucket S3 de destino                                                                       |
-| `AWS_REGION`           | Sim         | —                        | Região AWS do bucket S3                                                                            |
-| `PDF_GENERATION_QUEUE` | Não         | `pdf-generation`         | Nome da fila BullMQ                                                                                |
-| `NODE_ENV`             | Não         | `production`             | Ambiente de execução                                                                               |
+| Variável          | Obrigatória | Padrão                   | Descrição                                                                                          |
+| ----------------- | ----------- | ------------------------ | -------------------------------------------------------------------------------------------------- |
+| `REDIS_URL`       | Não         | `redis://localhost:6379` | URL de conexão Redis. Use `redis://` para standalone ou `rediss://` para cluster TLS (ElastiCache) |
+| `S3_BUCKET_NAME`  | Sim         | —                        | Nome do bucket S3 de destino                                                                       |
+| `AWS_REGION`      | Sim         | —                        | Região AWS do bucket S3                                                                            |
+| `GENERATOR_QUEUE` | Não         | `generator`              | Nome da fila BullMQ                                                                                |
+| `NODE_ENV`        | Não         | `production`             | Ambiente de execução                                                                               |
 
 ## Desenvolvimento local
 
@@ -126,7 +126,7 @@ deno task fmt:chk       # Verifica a formatação sem aplicar correções
 ### Nome da fila
 
 ```
-pdf-generation
+generator
 ```
 
 ### Payload de entrada (`GenerateDocumentJobData`)

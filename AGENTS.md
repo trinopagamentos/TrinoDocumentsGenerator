@@ -108,18 +108,18 @@ storage, and Puppeteer-based PDF generation. No database and no HTTP server are 
 ```typescript
 // Worker module pattern (no controllers, no DB, no HTTP)
 @Module({
-	imports: [BullModule.registerQueueAsync({ name: "pdf-generation" }), ConfigModule],
-	providers: [PdfGenerationProcessor, S3Service, PuppeteerService],
+	imports: [BullModule.registerQueueAsync({ name: "generator" }), ConfigModule],
+	providers: [GeneratorProcessor, S3Service, PuppeteerService],
 })
-export class PdfGenerationModule {}
+export class GeneratorModule {}
 ```
 
 ## Job Processor Pattern
 
 ```typescript
-@Processor("pdf-generation")
-export class PdfGenerationProcessor extends WorkerHost {
-	private readonly logger = new Logger(PdfGenerationProcessor.name);
+@Processor("generator")
+export class GeneratorProcessor extends WorkerHost {
+	private readonly logger = new Logger(GeneratorProcessor.name);
 
 	async process(job: Job): Promise<void> {
 		this.logger.log({

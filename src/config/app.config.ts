@@ -10,8 +10,8 @@ export interface AppConfig {
 	/** Região AWS do bucket S3 (ex: `us-east-1`, `sa-east-1`) */
 	awsRegion: string;
 
-	/** Nome da fila BullMQ para processamento de documentos. Padrão: `pdf-generation` */
-	pdfGenerationQueue: string;
+	/** Nome da fila BullMQ para processamento de documentos. Padrão: `generator` */
+	generatorQueue: string;
 
 	/** Ambiente de execução atual (ex: `development`, `production`) */
 	nodeEnv: string;
@@ -30,7 +30,7 @@ export default (): AppConfig => {
 		redisUrl: process.env.REDIS_URL ?? "redis://localhost:6379",
 		s3BucketName: process.env.S3_BUCKET_NAME ?? "trino-doc-worker-bucket",
 		awsRegion: process.env.AWS_REGION ?? "us-east-1",
-		pdfGenerationQueue: process.env.PDF_GENERATION_QUEUE ?? "pdf-generation",
+		generatorQueue: process.env.GENERATOR_QUEUE ?? "generator",
 		nodeEnv: process.env.NODE_ENV ?? "production",
 	};
 };

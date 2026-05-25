@@ -2,8 +2,8 @@ import "reflect-metadata";
 import { assertEquals, assertRejects } from "@std/assert";
 import { assertSpyCalls, stub } from "@std/testing/mock";
 import { Logger } from "@nestjs/common";
-import { PdfGenerationProcessor } from "@/pdf-generation/pdf-generation.processor.ts";
-import type { GenerateDocumentJobData } from "@/pdf-generation/dto/generate-document.job.ts";
+import { GeneratorProcessor } from "@/generator/generator.processor.ts";
+import type { GenerateDocumentJobData } from "@/generator/dto/generate-document.job.ts";
 
 const FAKE_PDF_BYTES = new Uint8Array([37, 80, 68, 70, 45, 116, 101, 115, 116]); // %PDF-test
 const FAKE_IMAGE_BYTES = new Uint8Array([80, 78, 71, 45, 116, 101, 115, 116]); // PNG-test
@@ -34,7 +34,7 @@ function makeMockS3Service(opts?: { url?: string; throwError?: Error }) {
 function makeJob(data: { documentType: "pdf" | "image" } & Partial<GenerateDocumentJobData>) {
 	return {
 		id: "test-job-id-123",
-		queueName: "pdf-generation",
+		queueName: "generator",
 		data: {
 			userId: "user-abc",
 			htmlContent: "<html><body>Olá</body></html>",
@@ -47,7 +47,7 @@ function makeJob(data: { documentType: "pdf" | "image" } & Partial<GenerateDocum
 	};
 }
 
-Deno.test("PdfGenerationProcessor.process: job PDF chama skreenService.generatePdf", async () => {
+Deno.test("GeneratorProcessor.process: job PDF chama skreenService.generatePdf", async () => {
 	let generatePdfCalled = false;
 	const mockSkreen = {
 		generatePdf: (_html: string, _opts?: unknown): Promise<Uint8Array> => {
@@ -57,14 +57,14 @@ Deno.test("PdfGenerationProcessor.process: job PDF chama skreenService.generateP
 		generateImage: (): Promise<Uint8Array> => Promise.resolve(FAKE_IMAGE_BYTES),
 	};
 
-	const processor = new PdfGenerationProcessor(mockSkreen as never, makeMockS3Service() as never);
+	const processor = new GeneratorProcessor(mockSkreen as never, makeMockS3Service() as never);
 
 	await processor.process(makeJob({ documentType: "pdf" }) as never);
 
 	assertEquals(generatePdfCalled, true);
 });
 
-Deno.test("PdfGenerationProcessor.process: job image chama skreenService.generateImage", async () => {
+Deno.test("GeneratorProcessor.process: job image chama skreenService.generateImage", async () => {
 	let generateImageCalled = false;
 	const mockSkreen = {
 		generatePdf: (): Promise<Uint8Array> => Promise.resolve(FAKE_PDF_BYTES),
@@ -74,14 +74,14 @@ Deno.test("PdfGenerationProcessor.process: job image chama skreenService.generat
 		},
 	};
 
-	const processor = new PdfGenerationProcessor(mockSkreen as never, makeMockS3Service() as never);
+	const processor = new GeneratorProcessor(mockSkreen as never, makeMockS3Service() as never);
 
 	await processor.process(makeJob({ documentType: "image", s3Key: "imgs/img.png" }) as never);
 
 	assertEquals(generateImageCalled, true);
 });
 
-Deno.test("PdfGenerationProcessor.process: chama s3Service.upload com key, buffer e documentType corretos", async () => {
+Deno.test("GeneratorProcessor.process: chama s3Service.upload com key, buffer e documentType corretos", async () => {
 	let capturedKey: string | undefined;
 	let capturedBuffer: Uint8Array | undefined;
 	let capturedType: string | undefined;
@@ -95,7 +95,7 @@ Deno.test("PdfGenerationProcessor.process: chama s3Service.upload com key, buffe
 		},
 	};
 
-	const processor = new PdfGenerationProcessor(makeMockSkreenService() as never, mockS3 as never);
+	const processor = new GeneratorProcessor(makeMockSkreenService() as never, mockS3 as never);
 
 	const job = makeJob({ documentType: "pdf", s3Key: "receipts/file.pdf" });
 	await processor.process(job as never);
@@ -105,8 +105,8 @@ Deno.test("PdfGenerationProcessor.process: chama s3Service.upload com key, buffe
 	assertEquals(capturedType, "pdf");
 });
 
-Deno.test("PdfGenerationProcessor.process: resultado contém url, userId e completedAt (ISO 8601 válido)", async () => {
-	const processor = new PdfGenerationProcessor(
+Deno.test("GeneratorProcessor.process: resultado contém url, userId e completedAt (ISO 8601 válido)", async () => {
+	const processor = new GeneratorProcessor(
 		makeMockSkreenService() as never,
 		makeMockS3Service({ url: "https://bucket.s3.amazonaws.com/doc.pdf" }) as never,
 	);
@@ -120,8 +120,8 @@ Deno.test("PdfGenerationProcessor.process: resultado contém url, userId e compl
 	assertEquals(Number.isNaN(parsed.getTime()), false);
 });
 
-Deno.test("PdfGenerationProcessor.process: metaData é incluído no resultado quando definido", async () => {
-	const processor = new PdfGenerationProcessor(makeMockSkreenService() as never, makeMockS3Service() as never);
+Deno.test("GeneratorProcessor.process: metaData é incluído no resultado quando definido", async () => {
+	const processor = new GeneratorProcessor(makeMockSkreenService() as never, makeMockS3Service() as never);
 
 	const meta = { invoiceId: "INV-001", amount: 99.99 };
 	const result = await processor.process(makeJob({ documentType: "pdf", metaData: meta }) as never);
@@ -129,8 +129,8 @@ Deno.test("PdfGenerationProcessor.process: metaData é incluído no resultado qu
 	assertEquals(result.metaData, meta);
 });
 
-Deno.test("PdfGenerationProcessor.process: metaData NÃO existe no resultado quando undefined (spread condicional)", async () => {
-	const processor = new PdfGenerationProcessor(makeMockSkreenService() as never, makeMockS3Service() as never);
+Deno.test("GeneratorProcessor.process: metaData NÃO existe no resultado quando undefined (spread condicional)", async () => {
+	const processor = new GeneratorProcessor(makeMockSkreenService() as never, makeMockS3Service() as never);
 
 	const result = await processor.process(makeJob({ documentType: "pdf", metaData: undefined }) as never);
 
@@ -138,9 +138,9 @@ Deno.test("PdfGenerationProcessor.process: metaData NÃO existe no resultado qua
 	assertEquals("metaData" in result, false);
 });
 
-Deno.test("PdfGenerationProcessor.process: erro é re-thrown para o BullMQ gerenciar retry", async () => {
+Deno.test("GeneratorProcessor.process: erro é re-thrown para o BullMQ gerenciar retry", async () => {
 	const originalError = new Error("Render failed");
-	const processor = new PdfGenerationProcessor(
+	const processor = new GeneratorProcessor(
 		makeMockSkreenService({ throwOnPdf: originalError }) as never,
 		makeMockS3Service() as never,
 	);
@@ -148,9 +148,9 @@ Deno.test("PdfGenerationProcessor.process: erro é re-thrown para o BullMQ geren
 	await assertRejects(() => processor.process(makeJob({ documentType: "pdf" }) as never), Error, "Render failed");
 });
 
-Deno.test("PdfGenerationProcessor.process: logger.error é chamado quando o job falha", async () => {
+Deno.test("GeneratorProcessor.process: logger.error é chamado quando o job falha", async () => {
 	const generateError = new Error("Render failed");
-	const processor = new PdfGenerationProcessor(
+	const processor = new GeneratorProcessor(
 		makeMockSkreenService({ throwOnPdf: generateError }) as never,
 		makeMockS3Service() as never,
 	);

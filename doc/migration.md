@@ -1,6 +1,41 @@
 # TrinoCore → TrinoDocWorker: Guia de Migração
 
-## O que mudou
+## Renomeação da fila BullMQ (`pdf-generation` → `generator`)
+
+A fila BullMQ foi renomeada para refletir que o worker gera tanto PDFs quanto imagens.
+
+| Item                  | Antes                  | Depois           |
+| --------------------- | ---------------------- | ---------------- |
+| Nome da fila          | `pdf-generation`       | `generator`      |
+| Variável de ambiente  | `PDF_GENERATION_QUEUE` | `GENERATOR_QUEUE` |
+
+### Passos para migrar o TrinoCore
+
+1. Atualize a variável de ambiente em todos os ambientes (staging e produção):
+   ```sh
+   # Remova a variável antiga
+   PDF_GENERATION_QUEUE=pdf-generation  ❌
+
+   # Adicione a nova
+   GENERATOR_QUEUE=generator  ✅
+   ```
+
+2. Atualize a referência ao nome da fila no código do TrinoCore onde o job é publicado:
+   ```typescript
+   // Antes
+   const queue = new Queue("pdf-generation", { connection });
+
+   // Depois
+   const queue = new Queue("generator", { connection });
+   ```
+
+3. Faça o deploy do TrinoDocWorker **antes** de migrar o TrinoCore para evitar jobs perdidos durante
+   a transição. Como a fila anterior (`pdf-generation`) deixará de ser consumida, drene-a antes do
+   cutover ou aguarde os jobs pendentes serem processados.
+
+---
+
+## Migração do renderer: Chromium headless → Skreen WASM
 
 O TrinoDocWorker migrou de Chromium headless (`puppeteer-core` + `@sparticuz/chromium`) para um
 renderer WASM puro (`@tadashi/skreen`, baseado em Rust/Blitz/Vello). A mudança é transparente para o

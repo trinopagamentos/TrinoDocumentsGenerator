@@ -21,7 +21,7 @@ Before committing, always run: `deno task lint && deno task fmt:chk && deno task
 Run a single test file:
 
 ```sh
-deno test -A src/pdf-generation/__tests__/pdf-generation.processor.spec.ts
+deno test -A src/generator/__tests__/generator.processor.spec.ts
 ```
 
 ## Architecture
@@ -31,16 +31,16 @@ Redis, renders HTML to PDF or image via headless Chromium, uploads the result to
 job result.
 
 ```
-TrinoCore (API) → Redis (BullMQ: pdf-generation queue) → TrinoDocWorker → AWS S3
+TrinoCore (API) → Redis (BullMQ: generator queue) → TrinoDocWorker → AWS S3
 ```
 
 The app is bootstrapped with `NestFactory.createApplicationContext` (no HTTP binding). Entry point is `src/main.ts`.
 
 ### Key flows
 
-**Job processing pipeline** (`src/pdf-generation/pdf-generation.processor.ts`):
+**Job processing pipeline** (`src/generator/generator.processor.ts`):
 
-1. `PdfGenerationProcessor.process()` receives a `GenerateDocumentJobData` job
+1. `GeneratorProcessor.process()` receives a `GenerateDocumentJobData` job
 2. Delegates to `PuppeteerService.generatePdf()` or `generateImage()` based on `documentType`
 3. Calls `S3Service.upload()` with the resulting buffer
 4. Returns `GenerateDocumentJobResult` with URL, userId, and completedAt
@@ -60,17 +60,17 @@ The app is bootstrapped with `NestFactory.createApplicationContext` (no HTTP bin
 
 ```
 src/
-├── config/app.config.ts                    # Env var validation and typed config
-├── pdf-generation/
-│   ├── dto/generate-document.job.ts        # Job input/output types
-│   ├── pdf-generation.module.ts            # BullMQ queue registration + retry policy
-│   └── pdf-generation.processor.ts        # Job consumer
+├── config/app.config.ts                # Env var validation and typed config
+├── generator/
+│   ├── dto/generate-document.job.ts    # Job input/output types
+│   ├── generator.module.ts             # BullMQ queue registration + retry policy
+│   └── generator.processor.ts         # Job consumer
 ├── shared/
-│   ├── services/puppeteer.service.ts       # PDF/image generation
-│   ├── services/s3.service.ts              # S3 uploads
-│   ├── utils/bullmq-connection.util.ts     # Redis connection factory
+│   ├── services/skreen.service.ts      # PDF/image generation
+│   ├── services/s3.service.ts          # S3 uploads
+│   ├── utils/bullmq-connection.util.ts # Redis connection factory
 │   └── shared.module.ts
-└── app.module.ts                           # Root module (ConfigModule + BullModule)
+└── app.module.ts                       # Root module (ConfigModule + BullModule)
 ```
 
 ## PR title format

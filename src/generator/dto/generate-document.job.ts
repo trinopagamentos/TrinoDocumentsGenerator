@@ -3,7 +3,7 @@
  * @description DTOs (Data Transfer Objects) para os jobs de geração de documentos.
  *
  * Define as interfaces de entrada e saída dos jobs processados pela fila
- * BullMQ `pdf-generation`. Estes contratos são compartilhados entre o
+ * BullMQ `generator`. Estes contratos são compartilhados entre o
  * API Core (produtor) e o TrinoDocWorker (consumidor).
  */
 
@@ -96,7 +96,7 @@ export interface ImageOptions {
 }
 
 /**
- * Payload do job publicado na fila `pdf-generation` pelo API Core.
+ * Payload do job publicado na fila `generator` pelo API Core.
  *
  * @remarks
  * O campo `pdfOptions` deve ser informado quando `documentType === "pdf"`,

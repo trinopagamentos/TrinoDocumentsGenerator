@@ -33,7 +33,7 @@ async function bootstrap() {
 	// Dispara os lifecycle hooks (OnModuleInit, OnApplicationBootstrap, etc.)
 	await app.init();
 
-	logger.log("Worker started — consuming pdf-generation queue");
+	logger.log("Worker started — consuming generator queue");
 
 	// Sinal enviado pelo orquestrador (Docker/ECS/Kubernetes) ao parar o contêiner
 	process.on("SIGTERM", async () => {
