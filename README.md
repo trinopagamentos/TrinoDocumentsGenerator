@@ -1,14 +1,14 @@
 # TrinoDocWorker
 
 Worker assíncrono de geração de documentos da plataforma Trino. Consome jobs de uma fila BullMQ (Redis), renderiza HTML
-em PDF ou imagem via Puppeteer/Chromium headless e armazena o resultado no AWS S3.
+em PDF ou imagem via `@tadashi/skreen` (renderer WASM em Rust/Blitz/Vello) e armazena o resultado no AWS S3.
 
 ## Visão geral
 
 ```
 TrinoCore (API)  →  Redis (BullMQ)  →  TrinoDocWorker  →  AWS S3
-                      pdf-generation       Puppeteer
-                           queue           Chromium
+                      pdf-generation       @tadashi/skreen
+                           queue           (WASM renderer)
 ```
 
 O worker **não expõe nenhuma porta HTTP**.\
@@ -16,15 +16,14 @@ O worker **não expõe nenhuma porta HTTP**.\
 
 ## Stack
 
-| Tecnologia                                                                      | Versão | Função                             |
-| ------------------------------------------------------------------------------- | ------ | ---------------------------------- |
-| [Deno](https://deno.com)                                                        | 2.7.13 | Runtime TypeScript                 |
-| [NestJS](https://nestjs.com)                                                    | 11     | Framework / DI / ciclo de vida     |
-| [BullMQ](https://docs.bullmq.io)                                                | 5      | Consumo de filas Redis             |
-| [Puppeteer Core](https://pptr.dev)                                              | 24     | Renderização headless              |
-| [@sparticuz/chromium](https://github.com/Sparticuz/chromium)                    | 147    | Binário Chromium para Linux/Docker |
-| [AWS SDK S3](https://docs.aws.amazon.com/AWSJavaScriptSDK/v3/latest/client/s3/) | 3      | Upload de arquivos                 |
-| [SST](https://sst.dev)                                                          | 4      | Infraestrutura como código (IaC)   |
+| Tecnologia                                                                      | Versão | Função                           |
+| ------------------------------------------------------------------------------- | ------ | -------------------------------- |
+| [Deno](https://deno.com)                                                        | 2.8    | Runtime TypeScript               |
+| [NestJS](https://nestjs.com)                                                    | 11     | Framework / DI / ciclo de vida   |
+| [BullMQ](https://docs.bullmq.io)                                                | 5      | Consumo de filas Redis           |
+| [@tadashi/skreen](https://jsr.io/@tadashi/skreen)                               | 1.1    | Renderer WASM (PDF + PNG)        |
+| [AWS SDK S3](https://docs.aws.amazon.com/AWSJavaScriptSDK/v3/latest/client/s3/) | 3      | Upload de arquivos               |
+| [SST](https://sst.dev)                                                          | 4      | Infraestrutura como código (IaC) |
 
 ## Estrutura do projeto
 
@@ -41,7 +40,7 @@ src/
 |
 ├── shared/
 │   ├── services/
-│   |    ├── puppeteer.service.ts       # Geração de PDF e imagem via Chromium headless
+│   |    ├── skreen.service.ts          # Geração de PDF e imagem via @tadashi/skreen (WASM)
 │   |    └── s3.service.ts              # Upload de arquivos no AWS S3
 │   ├── utils/
 │   |    └── bullmq-connection.util.ts  # Fábrica de conexão BullMQ (standalone e cluster Redis)
@@ -59,16 +58,18 @@ src/
 | `S3_BUCKET_NAME`       | Sim         | —                        | Nome do bucket S3 de destino                                                                       |
 | `AWS_REGION`           | Sim         | —                        | Região AWS do bucket S3                                                                            |
 | `PDF_GENERATION_QUEUE` | Não         | `pdf-generation`         | Nome da fila BullMQ                                                                                |
-| `LOCAL_CHROMIUM_PATH`  | Não         | —                        | Caminho local do Chromium (desenvolvimento)                                                        |
 | `NODE_ENV`             | Não         | `production`             | Ambiente de execução                                                                               |
 
 ## Desenvolvimento local
 
 ### Pré-requisitos
 
-- [Deno](https://deno.com) >= 2.6
+- [Deno](https://deno.com) >= 2.8
 - [Docker](https://www.docker.com) (para o Redis local)
 - Credenciais AWS configuradas (`~/.aws/credentials` ou variáveis de ambiente)
+
+> [!NOTE]\
+> O renderer `@tadashi/skreen` é WASM puro — não é necessário instalar Chromium ou qualquer binário externo.
 
 ### 1. Suba o Redis local
 
@@ -79,30 +80,9 @@ deno task redis:local
 Inicia um contêiner Redis 7 (Alpine) na porta `6379`.\
 Na próxima execução, reutiliza o contêiner existente.
 
-### 2. Instale o Chromium localmente
+### 2. Configure as variáveis de ambiente
 
-Em desenvolvimento, o worker usa um binário Chromium local em vez do `@sparticuz/chromium` (otimizado para
-Lambda/Docker). Instale-o via `@puppeteer/browsers`:
-
-```sh
-npx @puppeteer/browsers install chrome-headless-shell@147 --path ~/.cache/puppeteer
-```
-
-Após a instalação, o comando exibirá o caminho do executável, algo como:
-
-```
-chrome-headless-shell@147 /Users/<seu-usuario>/.cache/puppeteer/chrome-headless-shell/mac_arm-147.0.7727.117/chrome-headless-shell-mac-arm64/chrome-headless-shell
-```
-
-Copie esse caminho e defina-o como `LOCAL_CHROMIUM_PATH` no seu `.env` (veja o passo seguinte).
-
-> [!TIP]\
-> Para listar os binários já instalados e obter o caminho novamente, execute:\
-> `npx @puppeteer/browsers list --path ~/.cache/puppeteer`
-
-### 3. Configure as variáveis de ambiente
-
-Renomeie o arquivo `.env.example` para `.env` e defina `LOCAL_CHROMIUM_PATH` com o caminho obtido no passo anterior:
+Renomeie o arquivo `.env.example` para `.env`:
 
 ```sh
 # Redis local (standalone)
@@ -111,11 +91,9 @@ REDIS_URL=redis://localhost:6379
 # S3 (obrigatório)
 S3_BUCKET_NAME=<nome-do-bucket>
 AWS_REGION=us-east-1
-
-LOCAL_CHROMIUM_PATH="/Users/<seu-usuario>/.cache/puppeteer/chrome-headless-shell/mac_arm-147.0.7727.117/chrome-headless-shell-mac-arm64/chrome-headless-shell"
 ```
 
-### 4. Execute o worker
+### 3. Execute o worker
 
 ```sh
 # Modo produção (uma execução)
@@ -160,25 +138,18 @@ pdf-generation
   htmlContent: string;      // HTML completo já renderizado
   s3Key: string;            // Ex: "receipts/2024/uuid.pdf"
   pdfOptions?: {
-    format?: "A4" | "Letter" | "Legal";    // padrão: "A4"
-    landscape?: boolean;                   // padrão: false
-    printBackground?: boolean;             // padrão: true
-    margin?: { top?; right?; bottom?; left? }; // padrão: "10mm"
-    tagged?: boolean;                      // padrão: true
-    preferCSSPageSize?: boolean;           // padrão: true
+    width?: number;          // largura da viewport em px; padrão: 1200
+    height?: number;         // altura em px; 0 = auto-expand até 4000px; padrão: 800
+    scale?: number;          // device-pixel ratio; padrão: 2.0
+    fonts?: Uint8Array[];    // bytes TTF/OTF adicionais (complementa Inter embutida)
+    withTailwind?: boolean;  // pré-processar Tailwind CSS v4 server-side; padrão: false
   };
   imageOptions?: {
-    type?: "png" | "jpeg" | "webp";        // padrão: "png"
-    quality?: number;                      // 0–100, apenas jpeg/webp; padrão: 80
-    fullPage?: boolean;                    // padrão: true (apenas no modo fallback)
-    width?: number;                        // padrão: 320
-    height?: number;                       // padrão: 1080
-    deviceScaleFactor?: number;            // padrão: 1
-    hasTouch?: boolean;
-    isLandscape?: boolean;
-    isMobile?: boolean;                    // padrão: true
-    clip?: { x; y; width; height };        // região customizada
-    omitBackground?: boolean;              // padrão: false
+    width?: number;          // largura da viewport em px; padrão: 1200
+    height?: number;         // altura em px; 0 = auto-expand até 4000px; padrão: 0
+    scale?: number;          // device-pixel ratio; padrão: 2.0
+    fonts?: Uint8Array[];    // bytes TTF/OTF adicionais (complementa Inter embutida)
+    withTailwind?: boolean;  // pré-processar Tailwind CSS v4 server-side; padrão: false
   };
   metaData?: Record<string, unknown>;      // dados arbitrários repassados ao API Core
 }
@@ -197,15 +168,15 @@ pdf-generation
 
 ### Políticas de retry
 
-| Configuração              | Valor                 |
-| ------------------------- | --------------------- |
-| Tentativas máximas        | 2                     |
-| Estratégia de backoff     | Exponencial           |
-| Delay inicial             | 5 segundos (5s → 10s) |
-| Jobs concluídos retidos   | 1 000 (máx 24 horas)  |
-| Jobs com falha retidos    | Máx 7 dias            |
-| Lock duration (Puppeteer) | 5 minutos             |
-| Max stalled count         | 1                     |
+| Configuração            | Valor                 |
+| ----------------------- | --------------------- |
+| Tentativas máximas      | 2                     |
+| Estratégia de backoff   | Exponencial           |
+| Delay inicial           | 5 segundos (5s → 10s) |
+| Jobs concluídos retidos | 1 000 (máx 24 horas)  |
+| Jobs com falha retidos  | Máx 7 dias            |
+| Lock duration           | 5 minutos             |
+| Max stalled count       | 1                     |
 
 ## Deploy (SST)
 
