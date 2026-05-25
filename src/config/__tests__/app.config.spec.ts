@@ -70,16 +70,6 @@ Deno.test("appConfig: REDIS_URL customizado é preservado", () => {
 	});
 });
 
-Deno.test("appConfig: LOCAL_CHROMIUM_PATH string vazia torna-se undefined; valor definido é preservado", () => {
-	withEnv({ LOCAL_CHROMIUM_PATH: "" }, () => {
-		assertEquals(appConfig().localChromiumPath, undefined);
-	});
-
-	withEnv({ LOCAL_CHROMIUM_PATH: "/usr/bin/chromium" }, () => {
-		assertEquals(appConfig().localChromiumPath, "/usr/bin/chromium");
-	});
-});
-
 Deno.test("appConfig: pdfGenerationQueue usa padrão 'pdf-generation' e aceita valor customizado", () => {
 	withEnv({}, () => {
 		assertEquals(appConfig().pdfGenerationQueue, "pdf-generation");

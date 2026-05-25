@@ -3,14 +3,14 @@
  * @description Processor BullMQ responsável por consumir e processar os jobs da fila `pdf-generation`.
  *
  * Cada job contém um HTML pré-renderizado e metadados do documento. O processor
- * delega a renderização ao {@link PuppeteerService} e o armazenamento ao
+ * delega a renderização ao {@link SkreenService} e o armazenamento ao
  * {@link S3Service}, retornando a URL pública do arquivo gerado.
  */
 
 import { Logger } from "@nestjs/common";
 import { Processor, WorkerHost } from "@nestjs/bullmq";
 import { Job } from "bullmq";
-import { PuppeteerService } from "@/shared/services/puppeteer.service.ts";
+import { SkreenService } from "@/shared/services/skreen.service.ts";
 import { S3Service } from "@/shared/services/s3.service.ts";
 import type { GenerateDocumentJobData, GenerateDocumentJobResult } from "@/pdf-generation/dto/generate-document.job.ts";
 
@@ -27,9 +27,6 @@ import type { GenerateDocumentJobData, GenerateDocumentJobResult } from "@/pdf-g
  * Após esgotar as tentativas, o job é movido para a Dead Letter Queue (DLQ).
  */
 @Processor("pdf-generation", {
-	// Default lockDuration is 30s — too short for heavy Puppeteer renders.
-	// If the lock expires the job is re-queued while still running, causing
-	// duplicate S3 uploads and stale-connection timeouts.
 	lockDuration: 300_000,
 	maxStalledCount: 1,
 })
@@ -37,11 +34,11 @@ export class PdfGenerationProcessor extends WorkerHost {
 	private readonly logger = new Logger(PdfGenerationProcessor.name);
 
 	/**
-	 * @param puppeteerService - Serviço responsável por renderizar HTML em PDF ou imagem
+	 * @param skreenService - Serviço responsável por renderizar HTML em PDF ou imagem
 	 * @param s3Service - Serviço responsável por fazer upload do documento no S3
 	 */
 	constructor(
-		private readonly puppeteerService: PuppeteerService,
+		private readonly skreenService: SkreenService,
 		private readonly s3Service: S3Service,
 	) {
 		super();
@@ -52,8 +49,8 @@ export class PdfGenerationProcessor extends WorkerHost {
 	 *
 	 * Pipeline de execução:
 	 * 1. Determina o tipo de documento (`pdf` ou `image`)
-	 * 2. Chama o `PuppeteerService` para renderizar o HTML em buffer binário
-	 * 3. Faz upload do buffer no S3 via `S3Service`
+	 * 2. Chama o `SkreenService` para renderizar o HTML em bytes binários
+	 * 3. Faz upload dos bytes no S3 via `S3Service`
 	 * 4. Retorna o resultado com a URL pública, userId e timestamp de conclusão
 	 *
 	 * @param job - Job BullMQ contendo os dados de entrada do documento
@@ -71,18 +68,18 @@ export class PdfGenerationProcessor extends WorkerHost {
 		});
 
 		try {
-			// Etapa 1: renderizar o HTML em buffer binário (PDF ou imagem)
+			// Etapa 1: renderizar o HTML em bytes binários (PDF ou imagem)
 			const buffer = job.data.documentType === "pdf"
-				? await this.puppeteerService.generatePdf(job.data.htmlContent, job.data.pdfOptions)
-				: await this.puppeteerService.generateImage(job.data.htmlContent, job.data.imageOptions);
+				? await this.skreenService.generatePdf(job.data.htmlContent, job.data.pdfOptions)
+				: await this.skreenService.generateImage(job.data.htmlContent, job.data.imageOptions);
 
 			this.logger.log({
 				msg: "Document generated",
 				jobId: job.id,
-				bytes: buffer.length,
+				bytes: buffer.byteLength,
 			});
 
-			// Etapa 2: enviar o buffer para o S3 e obter a URL pública
+			// Etapa 2: enviar os bytes para o S3 e obter a URL pública
 			const url = await this.s3Service.upload(job.data.s3Key, buffer, job.data.documentType);
 
 			this.logger.log({

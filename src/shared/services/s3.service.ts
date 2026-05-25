@@ -11,7 +11,6 @@ import { ConfigService } from "@nestjs/config";
 import { S3Client } from "@aws-sdk/client-s3";
 import { Upload } from "@aws-sdk/lib-storage";
 import { FetchHttpHandler } from "@smithy/fetch-http-handler";
-import { Buffer } from "node:buffer";
 
 /**
  * Serviço injetável para upload de arquivos no AWS S3.
@@ -25,7 +24,7 @@ import { Buffer } from "node:buffer";
  * `https://{bucket}.s3.amazonaws.com/{key}`
  *
  * @example
- * const url = await s3Service.upload('path/to/file.pdf', buffer, 'pdf');
+ * const url = await s3Service.upload('path/to/file.pdf', bytes, 'pdf');
  * // => 'https://meu-bucket.s3.amazonaws.com/path/to/file.pdf'
  */
 @Injectable()
@@ -53,7 +52,7 @@ export class S3Service {
 	}
 
 	/**
-	 * Faz o upload de um buffer binário para o S3 e retorna a URL pública do arquivo.
+	 * Faz o upload de bytes binários para o S3 e retorna a URL pública do arquivo.
 	 *
 	 * O `Content-Type` é definido automaticamente com base no `documentType`:
 	 * - `"pdf"` → `application/pdf`
@@ -65,15 +64,15 @@ export class S3Service {
 	 * @returns URL pública do objeto armazenado no formato `https://{bucket}.s3.amazonaws.com/{key}`
 	 * @throws Propaga erros do SDK AWS em caso de falha de autenticação, permissão ou rede
 	 */
-	async upload(key: string, buffer: Buffer, documentType: "pdf" | "image"): Promise<string> {
+	async upload(key: string, buffer: Uint8Array, documentType: "pdf" | "image"): Promise<string> {
 		const contentType = documentType === "pdf" ? "application/pdf" : "image/png";
-		const kb = Math.round(buffer.length / 1024);
+		const kb = Math.round(buffer.byteLength / 1024);
 
 		this.logger.log({
 			msg: "S3 upload start",
 			bucket: this.bucket,
 			key,
-			bytes: buffer.length,
+			bytes: buffer.byteLength,
 			kb,
 			contentType,
 		});

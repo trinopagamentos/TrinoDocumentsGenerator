@@ -8,136 +8,91 @@
  */
 
 /**
- * Opções de configuração para geração de documentos PDF via Puppeteer.
+ * Opções de renderização para geração de documentos PDF via Skreen.
  *
  * @remarks
- * Todos os campos são opcionais; o `PuppeteerService` aplica valores
+ * Todos os campos são opcionais; o `SkreenService` aplica valores
  * padrão sensatos para cada campo não informado.
+ * Margens e tamanho de página devem ser controlados via CSS no HTML
+ * (`padding`, `margin`, `@page`), pois o renderer não suporta opções
+ * de layout externas ao documento.
  */
 export interface PdfOptions {
 	/**
-	 * Tamanho da página do PDF.
-	 * @defaultValue "A4"
-	 */
-	format?: "A4" | "Letter" | "Legal";
-
-	/**
-	 * Orienta a página no modo paisagem (horizontal).
-	 * @defaultValue false
-	 */
-	landscape?: boolean;
-
-	/**
-	 * Inclui os backgrounds definidos via CSS no PDF gerado.
-	 * @defaultValue true
-	 */
-	printBackground?: boolean;
-
-	/**
-	 * Margens da página PDF. Aceita qualquer unidade CSS válida (ex: `"10mm"`, `"1cm"`, `"20px"`).
-	 * @defaultValue `{ top: "10mm", right: "10mm", bottom: "10mm", left: "10mm" }`
-	 */
-	margin?: {
-		top?: string;
-		right?: string;
-		bottom?: string;
-		left?: string;
-	};
-
-	/**
-	 * Gera PDF com tags de acessibilidade (PDF/UA).
-	 * @defaultValue true
-	 */
-	tagged?: boolean;
-
-	/**
-	 * Usa o tamanho de página definido via `@page` no CSS em vez do `format`.
-	 * @defaultValue true
-	 */
-	preferCSSPageSize?: boolean;
-}
-
-/**
- * Opções de configuração para geração de imagens (screenshot) via Puppeteer.
- *
- * @remarks
- * O `PuppeteerService` aplica auto-fit por padrão: quando `clip` não é
- * informado, as dimensões do conteúdo são detectadas automaticamente e
- * usadas como região de captura, evitando espaços em branco extras.
- */
-export interface ImageOptions {
-	/**
-	 * Formato da imagem gerada.
-	 * @defaultValue "png"
-	 */
-	type?: "png" | "jpeg" | "webp";
-
-	/**
-	 * Qualidade da compressão para formatos com perdas (`jpeg`, `webp`). Valor de 0 a 100.
-	 * Ignorado para `png`.
-	 * @defaultValue 80
-	 */
-	quality?: number;
-
-	/**
-	 * Captura a página inteira, incluindo conteúdo fora da viewport.
-	 * Mutuamente exclusivo com `clip`; usado como fallback quando as
-	 * dimensões do conteúdo não podem ser detectadas.
-	 * @defaultValue true (apenas no modo fallback)
-	 */
-	fullPage?: boolean;
-
-	/**
-	 * Fator de escala do dispositivo (DPR — Device Pixel Ratio).
-	 * Use `2` para imagens de alta resolução (Retina/HiDPI).
-	 * @defaultValue 1
-	 */
-	deviceScaleFactor?: number;
-
-	/** Simula suporte a touch na viewport. */
-	hasTouch?: boolean;
-
-	/** Simula orientação paisagem na viewport. */
-	isLandscape?: boolean;
-
-	/**
-	 * Simula viewport de dispositivo móvel.
-	 * @defaultValue true
-	 */
-	isMobile?: boolean;
-
-	/**
-	 * Largura da viewport em pixels.
-	 * @defaultValue 320
+	 * Largura da viewport em pixels lógicos.
+	 * @defaultValue 1200
 	 */
 	width?: number;
 
 	/**
-	 * Altura da viewport em pixels.
-	 * @defaultValue 1080
+	 * Altura da viewport em pixels lógicos.
+	 * Use `0` para expandir automaticamente até a altura do conteúdo (máx 4000px).
+	 * @defaultValue 800
 	 */
 	height?: number;
 
 	/**
-	 * Define uma região de captura customizada (crop).
-	 * Quando informado, tem precedência sobre o auto-fit e o `fullPage`.
+	 * Device-pixel ratio aplicado ao bitmap de saída.
+	 * @defaultValue 2.0
 	 */
-	clip?: {
-		/** Posição X (pixels) do canto superior esquerdo da região de captura */
-		x: number;
-		/** Posição Y (pixels) do canto superior esquerdo da região de captura */
-		y: number;
-		/** Largura da região de captura em pixels */
-		width: number;
-		/** Altura da região de captura em pixels */
-		height: number;
-	};
+	scale?: number;
 
 	/**
-	 * Remove o fundo branco padrão da captura, permitindo fundo transparente (PNG).
+	 * Fontes adicionais a embutir na renderização (bytes raw TTF/OTF).
+	 * Complementa a fonte Inter embutida por padrão.
+	 */
+	fonts?: Uint8Array[];
+
+	/**
+	 * Quando `true`, pré-processa o HTML com Tailwind CSS v4 antes de renderizar,
+	 * substituindo a CDN `@tailwindcss/browser` por um `<style>` inline gerado no servidor.
+	 * Necessário porque o renderer WASM não executa JavaScript.
 	 * @defaultValue false
 	 */
-	omitBackground?: boolean;
+	withTailwind?: boolean;
+}
+
+/**
+ * Opções de renderização para geração de imagens PNG via Skreen.
+ *
+ * @remarks
+ * O renderer WASM produz exclusivamente imagens PNG.
+ * A altura padrão é `0` (auto-expand), que ajusta automaticamente
+ * ao conteúdo renderizado (máx 4000px lógicos).
+ */
+export interface ImageOptions {
+	/**
+	 * Largura da viewport em pixels lógicos.
+	 * @defaultValue 1200
+	 */
+	width?: number;
+
+	/**
+	 * Altura da viewport em pixels lógicos.
+	 * Use `0` para expandir automaticamente até a altura do conteúdo (máx 4000px).
+	 * @defaultValue 0
+	 */
+	height?: number;
+
+	/**
+	 * Device-pixel ratio aplicado ao bitmap de saída.
+	 * @defaultValue 2.0
+	 */
+	scale?: number;
+
+	/**
+	 * Fontes adicionais a embutir na renderização (bytes raw TTF/OTF).
+	 * Complementa a fonte Inter embutida por padrão.
+	 */
+	fonts?: Uint8Array[];
+
+	/**
+	 * Quando `true`, pré-processa o HTML com Tailwind CSS v4 antes de renderizar,
+	 * substituindo a CDN `@tailwindcss/browser` por um `<style>` inline gerado no servidor.
+	 * Necessário porque o renderer WASM não executa JavaScript.
+	 * @defaultValue false
+	 */
+	withTailwind?: boolean;
 }
 
 /**
@@ -146,16 +101,16 @@ export interface ImageOptions {
  * @remarks
  * O campo `pdfOptions` deve ser informado quando `documentType === "pdf"`,
  * e `imageOptions` quando `documentType === "image"`. Ambos são opcionais
- * pois o `PuppeteerService` possui defaults para todos os parâmetros.
+ * pois o `SkreenService` possui defaults para todos os parâmetros.
  */
 export interface GenerateDocumentJobData {
 	/** ID do usuário solicitante (repassado no result para o API Core) */
 	userId: string;
 
-	/** Tipo de saída: PDF ou imagem (PNG/JPEG/WebP) */
+	/** Tipo de saída: PDF ou imagem PNG */
 	documentType: "pdf" | "image";
 
-	/** HTML já renderizado pelo API Core, pronto para ser processado pelo Puppeteer */
+	/** HTML já renderizado pelo API Core, pronto para ser processado pelo Skreen */
 	htmlContent: string;
 
 	/** Chave S3 de destino onde o arquivo será salvo. Ex: `"receipt/payment/uuid.png"` */

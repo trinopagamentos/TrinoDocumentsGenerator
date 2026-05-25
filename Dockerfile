@@ -1,24 +1,10 @@
-FROM denoland/deno:2.7.13
+FROM denoland/deno:alpine-2.8.0
 
 ARG TZ=America/Sao_Paulo
 ARG NODE_ENV=production
 
 ENV TZ=$TZ
 ENV NODE_ENV=$NODE_ENV
-ENV TINI_SUBREAPER=1
-
-# Dependências do Chromium no Linux
-RUN apt-get update && \
-    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-    ca-certificates \
-    libasound2 \
-    libatk-bridge2.0-0 \
-    libgtk-3-0 \
-    libnspr4 \
-    libnss3 \
-    nodejs \
-    tzdata \
-    && rm -rf /var/lib/apt/lists/*
 
 USER deno
 

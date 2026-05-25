@@ -13,12 +13,6 @@ export interface AppConfig {
 	/** Nome da fila BullMQ para processamento de documentos. Padrão: `pdf-generation` */
 	pdfGenerationQueue: string;
 
-	/**
-	 * Caminho absoluto para o executável do Chromium instalado localmente.
-	 * Quando definido, ignora o binário do `@sparticuz/chromium`.
-	 */
-	localChromiumPath: string | undefined;
-
 	/** Ambiente de execução atual (ex: `development`, `production`) */
 	nodeEnv: string;
 }
@@ -37,7 +31,6 @@ export default (): AppConfig => {
 		s3BucketName: process.env.S3_BUCKET_NAME ?? "trino-doc-worker-bucket",
 		awsRegion: process.env.AWS_REGION ?? "us-east-1",
 		pdfGenerationQueue: process.env.PDF_GENERATION_QUEUE ?? "pdf-generation",
-		localChromiumPath: process.env.LOCAL_CHROMIUM_PATH || undefined,
 		nodeEnv: process.env.NODE_ENV ?? "production",
 	};
 };
