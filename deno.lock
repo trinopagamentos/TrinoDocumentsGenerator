@@ -3,22 +3,24 @@
   "specifiers": {
     "jsr:@std/assert@1.0.19": "1.0.19",
     "jsr:@std/assert@^1.0.19": "1.0.19",
-    "jsr:@std/data-structures@^1.0.11": "1.0.11",
-    "jsr:@std/fs@^1.0.23": "1.0.23",
-    "jsr:@std/internal@^1.0.12": "1.0.13",
-    "jsr:@std/internal@^1.0.13": "1.0.13",
-    "jsr:@std/path@^1.1.4": "1.1.4",
-    "jsr:@std/testing@1.0.18": "1.0.18",
-    "jsr:@tadashi/skreen@2.0.0": "2.0.0",
+    "jsr:@std/async@^1.4.0": "1.4.0",
+    "jsr:@std/data-structures@^1.1.0": "1.1.0",
+    "jsr:@std/fs@^1.0.24": "1.0.24",
+    "jsr:@std/internal@^1.0.12": "1.0.14",
+    "jsr:@std/internal@^1.0.14": "1.0.14",
+    "jsr:@std/path@^1.1.5": "1.1.5",
+    "jsr:@std/testing@1.0.19": "1.0.19",
+    "jsr:@tadashi/skreen@3.0.1": "3.0.1",
     "npm:@aws-sdk/client-s3@3.1053.0": "3.1053.0",
     "npm:@aws-sdk/lib-storage@3.1053.0": "3.1053.0_@aws-sdk+client-s3@3.1053.0",
+    "npm:@fulgur-rs/cli@0.16.0": "0.16.0",
     "npm:@nestjs/bullmq@11.0.4": "11.0.4_@nestjs+common@11.1.24__reflect-metadata@0.2.2__rxjs@7.8.2_@nestjs+core@11.1.24__@nestjs+common@11.1.24___reflect-metadata@0.2.2___rxjs@7.8.2__reflect-metadata@0.2.2__rxjs@7.8.2_bullmq@5.77.3_reflect-metadata@0.2.2_rxjs@7.8.2",
     "npm:@nestjs/common@11.1.24": "11.1.24_reflect-metadata@0.2.2_rxjs@7.8.2",
     "npm:@nestjs/config@4.0.4": "4.0.4_@nestjs+common@11.1.24__reflect-metadata@0.2.2__rxjs@7.8.2_rxjs@7.8.2_reflect-metadata@0.2.2",
     "npm:@nestjs/core@11.1.24": "11.1.24_@nestjs+common@11.1.24__reflect-metadata@0.2.2__rxjs@7.8.2_reflect-metadata@0.2.2_rxjs@7.8.2",
     "npm:@smithy/fetch-http-handler@5.4.4": "5.4.4",
     "npm:bullmq@5.77.3": "5.77.3",
-    "npm:ioredis@5.10.1": "5.10.1",
+    "npm:ioredis@5.11.0": "5.11.0",
     "npm:reflect-metadata@0.2.2": "0.2.2",
     "npm:rxjs@7.8.2": "7.8.2",
     "npm:sst@4.14.3": "4.14.3"
@@ -30,36 +32,43 @@
         "jsr:@std/internal@^1.0.12"
       ]
     },
-    "@std/data-structures@1.0.11": {
-      "integrity": "53b98ed7efa61f107dfc14244bd2ec5557f7f7ee0bbaef6d449d7937facacb89"
+    "@std/async@1.4.0": {
+      "integrity": "4d70b008634f571cff9b554090d628c76141c32613aae0ff283fd5fa23d0c379"
     },
-    "@std/fs@1.0.23": {
-      "integrity": "3ecbae4ce4fee03b180fa710caff36bb5adb66631c46a6460aaad49515565a37",
+    "@std/data-structures@1.1.0": {
+      "integrity": "c35ae4ad5d8e41a38573c2fe3e19b18ea2505f63cfea201edcb8720aca1f7f58"
+    },
+    "@std/fs@1.0.24": {
+      "integrity": "f3061b45b81673a2bece689da041df32d174be064c89eb6397fb5718d3fb7877",
       "dependencies": [
         "jsr:@std/path"
       ]
     },
-    "@std/internal@1.0.13": {
-      "integrity": "2f9546691d4ac2d32859c82dff284aaeac980ddeca38430d07941e7e288725c0"
+    "@std/internal@1.0.14": {
+      "integrity": "291516b3d4c35024d6ffbc0a9df5bf4c64116e05b50012cf846710152d2ffdf7"
     },
-    "@std/path@1.1.4": {
-      "integrity": "1d2d43f39efb1b42f0b1882a25486647cb851481862dc7313390b2bb044314b5",
+    "@std/path@1.1.5": {
+      "integrity": "ccea00982ea28c36becaf6e62f855406c76a8c32d462f66f415bbb7d83a271bc",
       "dependencies": [
-        "jsr:@std/internal@^1.0.12"
+        "jsr:@std/internal@^1.0.14"
       ]
     },
-    "@std/testing@1.0.18": {
-      "integrity": "d3152f57b11666bf6358d0e127c7e3488e91178b0c2d8fbf0793e1c53cd13cb1",
+    "@std/testing@1.0.19": {
+      "integrity": "f4236172365b216728dc3cc8b5e80a9f4c33083d1e4ede7613d5b25b4014898e",
       "dependencies": [
         "jsr:@std/assert@^1.0.19",
+        "jsr:@std/async",
         "jsr:@std/data-structures",
         "jsr:@std/fs",
-        "jsr:@std/internal@^1.0.13",
+        "jsr:@std/internal@^1.0.14",
         "jsr:@std/path"
       ]
     },
-    "@tadashi/skreen@2.0.0": {
-      "integrity": "79a4d88b631f6409cb2c03cc078619bbb28817b6146c7fc3294e2b4aadb4067d"
+    "@tadashi/skreen@3.0.1": {
+      "integrity": "c5b3b74e764e48f60bd6ddc5855e6f6ee3935b6fa4887d3e889f5632e9db7306",
+      "dependencies": [
+        "npm:@fulgur-rs/cli"
+      ]
     }
   },
   "npm": {
@@ -425,6 +434,51 @@
     "@borewit/text-codec@0.2.2": {
       "integrity": "sha512-DDaRehssg1aNrH4+2hnj1B7vnUGEjU6OIlyRdkMd0aUdIUvKXrJfXsy8LVtXAy7DRvYVluWbMspsRhz2lcW0mQ=="
     },
+    "@fulgur-rs/cli-darwin-arm64@0.16.0": {
+      "integrity": "sha512-/q9WLjfe6xpjyY9UEM1o9fsviPOO11CxTOs/UZR4K4DFd3M9WqJyMXH6EaJLKgDFJVvnkXA5wk/GGmA0+x3ogQ==",
+      "os": ["darwin"],
+      "cpu": ["arm64"]
+    },
+    "@fulgur-rs/cli-darwin-x64@0.16.0": {
+      "integrity": "sha512-2rlKgWELjDkLC8vc9w1VkFFKU3q4XZfpBvehAnCGjbEQt2mmZSUCmxcHQXX0NShgxpy7OSaqm+kgmSh8eDY35A==",
+      "os": ["darwin"],
+      "cpu": ["x64"]
+    },
+    "@fulgur-rs/cli-linux-arm64@0.16.0": {
+      "integrity": "sha512-l6tpi9TVZ9XpFu6cSuJ4/knZS8mz2kXZH2EeiwCxktpOiJO2jVYoIDpoufspvRnv/EN0nHS7YXCW++8yW/Atxg==",
+      "os": ["linux"],
+      "cpu": ["arm64"]
+    },
+    "@fulgur-rs/cli-linux-x64-musl@0.16.0": {
+      "integrity": "sha512-ZMHRlkZlTEmXjC2t/KGcePdxwFdBHgqbZ+18L4C37xcX8MWqVoOM3snYmezAxtM8X2cIjYIbDCjrg1T4P351tw==",
+      "os": ["linux"],
+      "cpu": ["x64"]
+    },
+    "@fulgur-rs/cli-linux-x64@0.16.0": {
+      "integrity": "sha512-jjxbm0b6MtlZXX4TmBEMkTkGvtI61BbuZNV22XZs/CguStB34/PnhONNuQCGSbXpVt/5FSd/m3YgGUmK1n2JTw==",
+      "os": ["linux"],
+      "cpu": ["x64"]
+    },
+    "@fulgur-rs/cli-win32-x64@0.16.0": {
+      "integrity": "sha512-g6a4hOnvJEMytQ0xF3HbzpC1f4d1ikeysEpPaAzGAdcpM3I1+QNhx6FqbPDJoQB6FzGbKehfl/URSS1yzIm0dQ==",
+      "os": ["win32"],
+      "cpu": ["x64"]
+    },
+    "@fulgur-rs/cli@0.16.0": {
+      "integrity": "sha512-xVOzdnzQntsm7Pj18x7jAPJn4osqNj5wJfQA5kC3tpLVjXRBG2rrdlV1MKdK+O8DYprZJ8cf0fyOob540LyRXg==",
+      "optionalDependencies": [
+        "@fulgur-rs/cli-darwin-arm64",
+        "@fulgur-rs/cli-darwin-x64",
+        "@fulgur-rs/cli-linux-arm64",
+        "@fulgur-rs/cli-linux-x64",
+        "@fulgur-rs/cli-linux-x64-musl",
+        "@fulgur-rs/cli-win32-x64"
+      ],
+      "bin": true
+    },
+    "@ioredis/commands@1.10.0": {
+      "integrity": "sha512-UmeW7z4LfctwoQ5wkhVzgq8tXkreED2xZGpX+Bg+zA+WJFZCT6c062AfCK/Dfk81xZnnwdhJCUMkitihRaoC2Q=="
+    },
     "@ioredis/commands@1.5.1": {
       "integrity": "sha512-JH8ZL/ywcJyR9MmJ5BNqZllXNZQqQbnVZOqpPQqE1vHiFgAw4NHbvE0FOduNU8IX9babitBT46571OnPTT0Zcw=="
     },
@@ -622,15 +676,15 @@
       "integrity": "sha512-ccGjnRF5Bbu21CfzDG7toIewoAj5W9DUHjqhFnppt8YBtoQplynzBGuSzn7yYQobpyYeHEqrYhiJ1NZInrKbyA==",
       "dependencies": [
         "cron-parser",
-        "ioredis",
+        "ioredis@5.10.1",
         "msgpackr",
         "node-abort-controller",
         "semver",
         "tslib"
       ]
     },
-    "cluster-key-slot@1.1.2": {
-      "integrity": "sha512-RMr0FhtfXemyinomL4hrWcYJxmX6deFdCxpJzhDttxgO1+bcCnkk+9drydLVDmAMG7NE6aN/fl4F7ucU/90gAA=="
+    "cluster-key-slot@1.1.1": {
+      "integrity": "sha512-rwHwUfXL40Chm1r08yrhU3qpUvdVlgkKNeyeGPOxnW8/SyVDvgRaed/Uz54AqWNaTCAThlj6QAs3TZcKI0xDEw=="
     },
     "consola@3.4.2": {
       "integrity": "sha512-5IKcdX0nnYavi6G7TtOhwkYzyjfJlatbjMjuLSfE2kYT5pMDOilZ4OvMhi637CcDICTmz3wARPoyhqyX1Y+XvA=="
@@ -706,12 +760,24 @@
     "ioredis@5.10.1": {
       "integrity": "sha512-HuEDBTI70aYdx1v6U97SbNx9F1+svQKBDo30o0b9fw055LMepzpOOd0Ccg9Q6tbqmBSJaMuY0fB7yw9/vjBYCA==",
       "dependencies": [
-        "@ioredis/commands",
+        "@ioredis/commands@1.5.1",
         "cluster-key-slot",
         "debug",
         "denque",
         "lodash.defaults",
         "lodash.isarguments",
+        "redis-errors",
+        "redis-parser",
+        "standard-as-callback"
+      ]
+    },
+    "ioredis@5.11.0": {
+      "integrity": "sha512-EZBErytyVovD8f6pDfG3Kb37N6Y3lmDA9NNj+4+IP13CzzHGeX+OyeRM2Um13khRzoBSzzL+5lVnCX8V2RLeMg==",
+      "dependencies": [
+        "@ioredis/commands@1.10.0",
+        "cluster-key-slot",
+        "debug",
+        "denque",
         "redis-errors",
         "redis-parser",
         "standard-as-callback"
@@ -954,8 +1020,8 @@
   "workspace": {
     "dependencies": [
       "jsr:@std/assert@1.0.19",
-      "jsr:@std/testing@1.0.18",
-      "jsr:@tadashi/skreen@2.0.0",
+      "jsr:@std/testing@1.0.19",
+      "jsr:@tadashi/skreen@3.0.1",
       "npm:@aws-sdk/client-s3@3.1053.0",
       "npm:@aws-sdk/lib-storage@3.1053.0",
       "npm:@nestjs/bullmq@11.0.4",
@@ -964,7 +1030,7 @@
       "npm:@nestjs/core@11.1.24",
       "npm:@smithy/fetch-http-handler@5.4.4",
       "npm:bullmq@5.77.3",
-      "npm:ioredis@5.10.1",
+      "npm:ioredis@5.11.0",
       "npm:reflect-metadata@0.2.2",
       "npm:rxjs@7.8.2",
       "npm:sst@4.14.3"

@@ -18,6 +18,10 @@ export function parseRedisUrl() {
 export function createBullMqConnection(): ConnectionOptions {
 	const { host, port, password, isCluster } = parseRedisUrl();
 	if (isCluster) {
+		// Type assertion needed: ioredis@5.11.0 Cluster is structurally incompatible
+		// with BullMQ's ConnectionOptions which pins ioredis@5.10.1 internally.
+		// The runtime behaviour is identical; only the protected `connecting` property
+		// was added to AbstractConnector in 5.11.0, causing a false TS error.
 		return new Cluster([{ host, port }], {
 			dnsLookup: (address, callback) => callback(null, address),
 			enableReadyCheck: true,
@@ -43,7 +47,7 @@ export function createBullMqConnection(): ConnectionOptions {
 			slotsRefreshInterval: 5000,
 			retryDelayOnClusterDown: 300,
 			scaleReads: "slave",
-		});
+		}) as unknown as ConnectionOptions;
 	}
 	return { host, port, ...(password && { password }) };
 }

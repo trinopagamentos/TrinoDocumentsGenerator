@@ -13,35 +13,32 @@
  * @remarks
  * Todos os campos são opcionais; o `SkreenService` aplica valores
  * padrão sensatos para cada campo não informado.
- * Margens e tamanho de página devem ser controlados via CSS no HTML
- * (`padding`, `margin`, `@page`), pois o renderer não suporta opções
- * de layout externas ao documento.
+ * O PDF é gerado via `fulgur` CLI (nativo), com suporte a múltiplas páginas
+ * e texto selecionável. Tamanho de página e margens são controlados aqui,
+ * estilos adicionais devem ser definidos via CSS no HTML.
  */
 export interface PdfOptions {
 	/**
-	 * Largura da viewport em pixels lógicos.
-	 * @defaultValue 1200
+	 * Tamanho da página.
+	 * @defaultValue "A4"
 	 */
-	width?: number;
+	pageSize?: "A4" | "A3" | "Letter";
 
 	/**
-	 * Altura da viewport em pixels lógicos.
-	 * Use `0` para expandir automaticamente até a altura do conteúdo (máx 4000px).
-	 * @defaultValue 800
+	 * Margem uniforme em milímetros.
+	 * @defaultValue 20
 	 */
-	height?: number;
+	marginMm?: number;
 
 	/**
-	 * Device-pixel ratio aplicado ao bitmap de saída.
-	 * @defaultValue 2.0
+	 * Título do documento escrito nos metadados do PDF.
 	 */
-	scale?: number;
+	title?: string;
 
 	/**
-	 * Fontes adicionais a embutir na renderização (bytes raw TTF/OTF).
-	 * Complementa a fonte Inter embutida por padrão.
+	 * Autor do documento escrito nos metadados do PDF.
 	 */
-	fonts?: Uint8Array[];
+	author?: string;
 }
 
 /**
