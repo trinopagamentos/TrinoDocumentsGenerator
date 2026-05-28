@@ -46,8 +46,8 @@
         "tailwindcss": "npm:tailwindcss@4.3.0"
     },
     "allowScripts": {
-        "allow": ["npm:@nestjs/core@11.1.19", "npm:@nestjs/core@11.1.24", "npm:lightningcss@1.32.0", "npm:msgpackr-extract@3.0.4"],
-        "deny": ["npm:msgpackr-extract@3.0.3"]
+        "allow": ["npm:@nestjs/core@11.1.19", "npm:@nestjs/core@11.1.24", "npm:lightningcss@1.32.0"],
+        "deny": ["npm:msgpackr-extract@3.0.3", "npm:msgpackr-extract@3.0.4"]
     },
     "tasks": {
         "dev": "sst dev",
