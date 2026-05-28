@@ -2,9 +2,9 @@
  * @file generator.processor.ts
  * @description Processor BullMQ responsável por consumir e processar os jobs da fila `generator`.
  *
- * Cada job contém um HTML pré-renderizado e metadados do documento. O processor
- * delega a renderização ao {@link SkreenService} e o armazenamento ao
- * {@link S3Service}, retornando a URL pública do arquivo gerado.
+ * Cada job contém um `templateName` e `templateData`. O processor renderiza o template
+ * Handlebars, processa o CSS Tailwind inline e delega a geração do documento ao
+ * {@link SkreenService} e o armazenamento ao {@link S3Service}.
  */
 
 import { Logger } from "@nestjs/common";
@@ -12,19 +12,18 @@ import { Processor, WorkerHost } from "@nestjs/bullmq";
 import { Job } from "bullmq";
 import { SkreenService } from "@/shared/services/skreen.service.ts";
 import { S3Service } from "@/shared/services/s3.service.ts";
+import { TailwindInlineService } from "@/shared/services/tailwind-inline.service.ts";
+import { TemplateService } from "@/shared/services/template.service.ts";
 import type { GenerateDocumentJobData, GenerateDocumentJobResult } from "@/generator/dto/generate-document.job.ts";
 
 /**
  * Consumer da fila BullMQ `generator`.
  *
- * Estende {@link WorkerHost} para integrar-se ao ciclo de vida gerenciado
- * pelo NestJS BullMQ. O método `process` é invocado automaticamente pelo
- * BullMQ a cada job disponível na fila.
- *
- * @remarks
- * Em caso de erro, a exceção é relançada para que o BullMQ possa aplicar
- * a política de retry/backoff configurada no {@link GeneratorModule}.
- * Após esgotar as tentativas, o job é movido para a Dead Letter Queue (DLQ).
+ * Pipeline de execução:
+ * 1. Renderiza o template Handlebars + compila CSS Tailwind inline
+ * 2. Renderiza o HTML em bytes binários via {@link SkreenService}
+ * 3. Faz upload no S3 via {@link S3Service}
+ * 4. Retorna resultado com URL, userId e timestamp
  */
 @Processor("generator", {
 	lockDuration: 300_000,
@@ -33,30 +32,15 @@ import type { GenerateDocumentJobData, GenerateDocumentJobResult } from "@/gener
 export class GeneratorProcessor extends WorkerHost {
 	private readonly logger = new Logger(GeneratorProcessor.name);
 
-	/**
-	 * @param skreenService - Serviço responsável por renderizar HTML em PDF ou imagem
-	 * @param s3Service - Serviço responsável por fazer upload do documento no S3
-	 */
 	constructor(
 		private readonly skreenService: SkreenService,
 		private readonly s3Service: S3Service,
+		private readonly templateService: TemplateService,
+		private readonly tailwindInlineService: TailwindInlineService,
 	) {
 		super();
 	}
 
-	/**
-	 * Processa um job de geração de documento.
-	 *
-	 * Pipeline de execução:
-	 * 1. Determina o tipo de documento (`pdf` ou `image`)
-	 * 2. Chama o `SkreenService` para renderizar o HTML em bytes binários
-	 * 3. Faz upload dos bytes no S3 via `S3Service`
-	 * 4. Retorna o resultado com a URL pública, userId e timestamp de conclusão
-	 *
-	 * @param job - Job BullMQ contendo os dados de entrada do documento
-	 * @returns Resultado com a URL do arquivo gerado, userId e timestamp
-	 * @throws Relança qualquer exceção para que o BullMQ gerencie o ciclo de retry
-	 */
 	async process(job: Job<GenerateDocumentJobData>): Promise<GenerateDocumentJobResult> {
 		this.logger.log({
 			msg: "Job started",
@@ -68,28 +52,21 @@ export class GeneratorProcessor extends WorkerHost {
 		});
 
 		try {
-			// Etapa 1: renderizar o HTML em bytes binários (PDF ou imagem)
+			// Etapa 1: resolver o HTML final
+			const htmlContent = await this.resolveHtml(job);
+
+			// Etapa 2: renderizar o HTML em bytes binários (PDF ou imagem)
 			const buffer = job.data.documentType === "pdf"
-				? await this.skreenService.generatePdf(job.data.htmlContent, job.data.pdfOptions)
-				: await this.skreenService.generateImage(job.data.htmlContent, job.data.imageOptions);
+				? await this.skreenService.generatePdf(htmlContent, job.data.pdfOptions)
+				: await this.skreenService.generateImage(htmlContent, job.data.imageOptions);
 
-			this.logger.log({
-				msg: "Document generated",
-				jobId: job.id,
-				bytes: buffer.byteLength,
-			});
+			this.logger.log({ msg: "Document generated", jobId: job.id, bytes: buffer.byteLength });
 
-			// Etapa 2: enviar os bytes para o S3 e obter a URL pública
+			// Etapa 3: enviar os bytes para o S3 e obter a URL pública
 			const url = await this.s3Service.upload(job.data.s3Key, buffer, job.data.documentType);
 
-			this.logger.log({
-				msg: "Uploaded to S3",
-				jobId: job.id,
-				s3Key: job.data.s3Key,
-				url,
-			});
+			this.logger.log({ msg: "Uploaded to S3", jobId: job.id, s3Key: job.data.s3Key, url });
 
-			// Etapa 3: montar e retornar o resultado do job
 			const result: GenerateDocumentJobResult = {
 				url,
 				userId: job.data.userId,
@@ -97,11 +74,7 @@ export class GeneratorProcessor extends WorkerHost {
 				...(job.data.metaData !== undefined && { metaData: job.data.metaData }),
 			};
 
-			this.logger.log({
-				msg: "Job completed",
-				jobId: job.id,
-				url,
-			});
+			this.logger.log({ msg: "Job completed", jobId: job.id, url });
 
 			return result;
 		} catch (err) {
@@ -112,9 +85,19 @@ export class GeneratorProcessor extends WorkerHost {
 				error: err instanceof Error ? err.message : String(err),
 				stack: err instanceof Error ? err.stack : undefined,
 			});
-
-			// Re-throw para BullMQ gerenciar retry/backoff/DLQ
 			throw err;
 		}
+	}
+
+	/**
+	 * Resolve o HTML final: renderiza o template Handlebars e processa CSS inline.
+	 */
+	private async resolveHtml(job: Job<GenerateDocumentJobData>): Promise<string> {
+		this.logger.log({ msg: "Rendering template", jobId: job.id, templateName: job.data.templateName });
+		const rawHtml = await this.templateService.render(
+			job.data.templateName,
+			job.data.templateData,
+		);
+		return this.tailwindInlineService.processHtml(rawHtml);
 	}
 }

@@ -1,6 +1,10 @@
 # pkgs
 node_modules
 
+# coverage
+coverage
+coverage_data
+
 # sst
 .sst
 

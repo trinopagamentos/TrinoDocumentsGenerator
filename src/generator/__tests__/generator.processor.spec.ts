@@ -3,11 +3,13 @@ import { assertEquals, assertRejects } from "@std/assert";
 import { assertSpyCalls, stub } from "@std/testing/mock";
 import { Logger } from "@nestjs/common";
 import { GeneratorProcessor } from "@/generator/generator.processor.ts";
+import { TemplateName } from "@/generator/dto/generate-document.job.ts";
 import type { GenerateDocumentJobData } from "@/generator/dto/generate-document.job.ts";
 
 const FAKE_PDF_BYTES = new Uint8Array([37, 80, 68, 70, 45, 116, 101, 115, 116]); // %PDF-test
 const FAKE_IMAGE_BYTES = new Uint8Array([80, 78, 71, 45, 116, 101, 115, 116]); // PNG-test
 const FAKE_S3_URL = "https://test-bucket.s3.amazonaws.com/docs/file.pdf";
+const RENDERED_HTML = "<html><head></head><body>rendered</body></html>";
 
 function makeMockSkreenService(opts?: { throwOnPdf?: Error; throwOnImage?: Error }) {
 	return {
@@ -31,13 +33,46 @@ function makeMockS3Service(opts?: { url?: string; throwError?: Error }) {
 	};
 }
 
+function makeMockTemplateService(opts?: { renderedHtml?: string; throwError?: Error }) {
+	return {
+		render: (_name: string, _data: unknown): Promise<string> => {
+			if (opts?.throwError) return Promise.reject(opts.throwError);
+			return Promise.resolve(opts?.renderedHtml ?? RENDERED_HTML);
+		},
+	};
+}
+
+function makeMockTailwindService(opts?: { throwError?: Error }) {
+	return {
+		processHtml: (html: string): Promise<string> => {
+			if (opts?.throwError) return Promise.reject(opts.throwError);
+			return Promise.resolve(html);
+		},
+	};
+}
+
+function makeProcessor(overrides?: {
+	skreen?: ReturnType<typeof makeMockSkreenService>;
+	s3?: ReturnType<typeof makeMockS3Service>;
+	template?: ReturnType<typeof makeMockTemplateService>;
+	tailwind?: ReturnType<typeof makeMockTailwindService>;
+}) {
+	return new GeneratorProcessor(
+		(overrides?.skreen ?? makeMockSkreenService()) as never,
+		(overrides?.s3 ?? makeMockS3Service()) as never,
+		(overrides?.template ?? makeMockTemplateService()) as never,
+		(overrides?.tailwind ?? makeMockTailwindService()) as never,
+	);
+}
+
 function makeJob(data: { documentType: "pdf" | "image" } & Partial<GenerateDocumentJobData>) {
 	return {
 		id: "test-job-id-123",
 		queueName: "generator",
 		data: {
 			userId: "user-abc",
-			htmlContent: "<html><body>Olá</body></html>",
+			templateName: TemplateName.PAYMENT_RECEIPT,
+			templateData: { title: "Teste" },
 			s3Key: "docs/user-abc/file.pdf",
 			pdfOptions: undefined,
 			imageOptions: undefined,
@@ -46,6 +81,8 @@ function makeJob(data: { documentType: "pdf" | "image" } & Partial<GenerateDocum
 		} as GenerateDocumentJobData,
 	};
 }
+
+// --- Delegação ao SkreenService ---
 
 Deno.test("GeneratorProcessor.process: job PDF chama skreenService.generatePdf", async () => {
 	let generatePdfCalled = false;
@@ -57,9 +94,7 @@ Deno.test("GeneratorProcessor.process: job PDF chama skreenService.generatePdf",
 		generateImage: (): Promise<Uint8Array> => Promise.resolve(FAKE_IMAGE_BYTES),
 	};
 
-	const processor = new GeneratorProcessor(mockSkreen as never, makeMockS3Service() as never);
-
-	await processor.process(makeJob({ documentType: "pdf" }) as never);
+	await makeProcessor({ skreen: mockSkreen }).process(makeJob({ documentType: "pdf" }) as never);
 
 	assertEquals(generatePdfCalled, true);
 });
@@ -74,12 +109,79 @@ Deno.test("GeneratorProcessor.process: job image chama skreenService.generateIma
 		},
 	};
 
-	const processor = new GeneratorProcessor(mockSkreen as never, makeMockS3Service() as never);
-
-	await processor.process(makeJob({ documentType: "image", s3Key: "imgs/img.png" }) as never);
+	await makeProcessor({ skreen: mockSkreen }).process(
+		makeJob({ documentType: "image", s3Key: "imgs/img.png" }) as never,
+	);
 
 	assertEquals(generateImageCalled, true);
 });
+
+// --- Pipeline de resolução de HTML ---
+
+Deno.test("GeneratorProcessor.process: chama templateService.render com templateName e templateData do job", async () => {
+	let capturedName: string | undefined;
+	let capturedData: unknown;
+	const mockTemplate = {
+		render: (name: string, data: unknown): Promise<string> => {
+			capturedName = name;
+			capturedData = data;
+			return Promise.resolve(RENDERED_HTML);
+		},
+	};
+
+	const payload = { title: "Recibo de teste" };
+	await makeProcessor({ template: mockTemplate }).process(
+		makeJob({
+			documentType: "pdf",
+			templateName: TemplateName.PAYMENT_RECEIPT,
+			templateData: payload as never,
+		}) as never,
+	);
+
+	assertEquals(capturedName, TemplateName.PAYMENT_RECEIPT);
+	assertEquals(capturedData, payload);
+});
+
+Deno.test("GeneratorProcessor.process: passa HTML do templateService para tailwindInlineService.processHtml", async () => {
+	const templateHtml = "<html><body>do template</body></html>";
+	let capturedHtml: string | undefined;
+
+	const mockTailwind = {
+		processHtml: (html: string): Promise<string> => {
+			capturedHtml = html;
+			return Promise.resolve(html);
+		},
+	};
+
+	await makeProcessor({ template: makeMockTemplateService({ renderedHtml: templateHtml }), tailwind: mockTailwind })
+		.process(
+			makeJob({ documentType: "pdf" }) as never,
+		);
+
+	assertEquals(capturedHtml, templateHtml);
+});
+
+Deno.test("GeneratorProcessor.process: passa HTML processado pelo Tailwind para skreenService", async () => {
+	const processedHtml = "<html><head><style>/* css */</style></head><body>ok</body></html>";
+	let capturedHtml: string | undefined;
+
+	const mockSkreen = {
+		generatePdf: (html: string, _opts?: unknown): Promise<Uint8Array> => {
+			capturedHtml = html;
+			return Promise.resolve(FAKE_PDF_BYTES);
+		},
+		generateImage: (): Promise<Uint8Array> => Promise.resolve(FAKE_IMAGE_BYTES),
+	};
+
+	await makeProcessor({
+		skreen: mockSkreen,
+		tailwind: { processHtml: () => Promise.resolve(processedHtml) },
+	}).process(makeJob({ documentType: "pdf" }) as never);
+
+	assertEquals(capturedHtml, processedHtml);
+});
+
+// --- Upload no S3 ---
 
 Deno.test("GeneratorProcessor.process: chama s3Service.upload com key, buffer e documentType corretos", async () => {
 	let capturedKey: string | undefined;
@@ -95,69 +197,93 @@ Deno.test("GeneratorProcessor.process: chama s3Service.upload com key, buffer e 
 		},
 	};
 
-	const processor = new GeneratorProcessor(makeMockSkreenService() as never, mockS3 as never);
-
-	const job = makeJob({ documentType: "pdf", s3Key: "receipts/file.pdf" });
-	await processor.process(job as never);
+	await makeProcessor({ s3: mockS3 }).process(
+		makeJob({ documentType: "pdf", s3Key: "receipts/file.pdf" }) as never,
+	);
 
 	assertEquals(capturedKey, "receipts/file.pdf");
 	assertEquals(capturedBuffer, FAKE_PDF_BYTES);
 	assertEquals(capturedType, "pdf");
 });
 
-Deno.test("GeneratorProcessor.process: resultado contém url, userId e completedAt (ISO 8601 válido)", async () => {
-	const processor = new GeneratorProcessor(
-		makeMockSkreenService() as never,
-		makeMockS3Service({ url: "https://bucket.s3.amazonaws.com/doc.pdf" }) as never,
-	);
+// --- Resultado ---
 
-	const result = await processor.process(makeJob({ documentType: "pdf", userId: "user-xyz" }) as never);
+Deno.test("GeneratorProcessor.process: resultado contém url, userId e completedAt (ISO 8601 válido)", async () => {
+	const result = await makeProcessor({
+		s3: makeMockS3Service({ url: "https://bucket.s3.amazonaws.com/doc.pdf" }),
+	}).process(makeJob({ documentType: "pdf", userId: "user-xyz" }) as never);
 
 	assertEquals(result.url, "https://bucket.s3.amazonaws.com/doc.pdf");
 	assertEquals(result.userId, "user-xyz");
 	assertEquals(typeof result.completedAt, "string");
-	const parsed = new Date(result.completedAt);
-	assertEquals(Number.isNaN(parsed.getTime()), false);
+	assertEquals(Number.isNaN(new Date(result.completedAt).getTime()), false);
 });
 
 Deno.test("GeneratorProcessor.process: metaData é incluído no resultado quando definido", async () => {
-	const processor = new GeneratorProcessor(makeMockSkreenService() as never, makeMockS3Service() as never);
-
 	const meta = { invoiceId: "INV-001", amount: 99.99 };
-	const result = await processor.process(makeJob({ documentType: "pdf", metaData: meta }) as never);
+	const result = await makeProcessor().process(makeJob({ documentType: "pdf", metaData: meta }) as never);
 
 	assertEquals(result.metaData, meta);
 });
 
 Deno.test("GeneratorProcessor.process: metaData NÃO existe no resultado quando undefined (spread condicional)", async () => {
-	const processor = new GeneratorProcessor(makeMockSkreenService() as never, makeMockS3Service() as never);
+	const result = await makeProcessor().process(makeJob({ documentType: "pdf", metaData: undefined }) as never);
 
-	const result = await processor.process(makeJob({ documentType: "pdf", metaData: undefined }) as never);
-
-	// O spread `...(x !== undefined && { key: x })` não adiciona a key quando undefined
 	assertEquals("metaData" in result, false);
 });
 
-Deno.test("GeneratorProcessor.process: erro é re-thrown para o BullMQ gerenciar retry", async () => {
-	const originalError = new Error("Render failed");
-	const processor = new GeneratorProcessor(
-		makeMockSkreenService({ throwOnPdf: originalError }) as never,
-		makeMockS3Service() as never,
-	);
+// --- Tratamento de erros ---
 
-	await assertRejects(() => processor.process(makeJob({ documentType: "pdf" }) as never), Error, "Render failed");
+Deno.test("GeneratorProcessor.process: erro do templateService é re-thrown para o BullMQ", async () => {
+	const renderError = new Error("Template render failed");
+
+	await assertRejects(
+		() =>
+			makeProcessor({ template: makeMockTemplateService({ throwError: renderError }) }).process(
+				makeJob({ documentType: "pdf" }) as never,
+			),
+		Error,
+		"Template render failed",
+	);
+});
+
+Deno.test("GeneratorProcessor.process: erro do skreenService é re-thrown para o BullMQ gerenciar retry", async () => {
+	await assertRejects(
+		() =>
+			makeProcessor({ skreen: makeMockSkreenService({ throwOnPdf: new Error("Render failed") }) }).process(
+				makeJob({ documentType: "pdf" }) as never,
+			),
+		Error,
+		"Render failed",
+	);
 });
 
 Deno.test("GeneratorProcessor.process: logger.error é chamado quando o job falha", async () => {
-	const generateError = new Error("Render failed");
-	const processor = new GeneratorProcessor(
-		makeMockSkreenService({ throwOnPdf: generateError }) as never,
-		makeMockS3Service() as never,
+	using loggerErrorStub = stub(Logger.prototype, "error", () => {});
+
+	await assertRejects(
+		() =>
+			makeProcessor({ skreen: makeMockSkreenService({ throwOnPdf: new Error("Render failed") }) }).process(
+				makeJob({ documentType: "pdf" }) as never,
+			),
+		Error,
+		"Render failed",
 	);
+
+	assertSpyCalls(loggerErrorStub, 1);
+});
+
+Deno.test("GeneratorProcessor.process: erro não-Error (string) é re-thrown e stack é undefined no log", async () => {
+	const mockSkreen = {
+		generatePdf: (): Promise<Uint8Array> => Promise.reject("string-error"),
+		generateImage: (): Promise<Uint8Array> => Promise.resolve(FAKE_IMAGE_BYTES),
+	};
 
 	using loggerErrorStub = stub(Logger.prototype, "error", () => {});
 
-	await assertRejects(() => processor.process(makeJob({ documentType: "pdf" }) as never), Error, "Render failed");
+	await assertRejects(
+		() => makeProcessor({ skreen: mockSkreen }).process(makeJob({ documentType: "pdf" }) as never),
+	);
 
 	assertSpyCalls(loggerErrorStub, 1);
 });

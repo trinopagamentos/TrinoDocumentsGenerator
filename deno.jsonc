@@ -25,24 +25,28 @@
     "nodeModulesDir": "auto",
     "imports": {
         "@/": "./src/",
-        "@aws-sdk/client-s3": "npm:@aws-sdk/client-s3@3.1054.0",
-        "@aws-sdk/lib-storage": "npm:@aws-sdk/lib-storage@3.1054.0",
-        "@smithy/fetch-http-handler": "npm:@smithy/fetch-http-handler@5.4.4",
+        "@aws-sdk/client-s3": "npm:@aws-sdk/client-s3@3.1055.0",
+        "@aws-sdk/lib-storage": "npm:@aws-sdk/lib-storage@3.1055.0",
+        "@smithy/fetch-http-handler": "npm:@smithy/fetch-http-handler@5.4.5",
         "@nestjs/bullmq": "npm:@nestjs/bullmq@11.0.4",
         "@nestjs/common": "npm:@nestjs/common@11.1.24",
         "@nestjs/config": "npm:@nestjs/config@4.0.4",
         "@nestjs/core": "npm:@nestjs/core@11.1.24",
         "@std/assert": "jsr:@std/assert@1.0.19",
         "@std/testing": "jsr:@std/testing@1.0.19",
-        "@tadashi/skreen": "jsr:@tadashi/skreen@3.0.1",
-        "bullmq": "npm:bullmq@5.77.4",
+        "@tadashi/skreen": "jsr:@tadashi/skreen@3.0.2",
+        "bullmq": "npm:bullmq@5.77.6",
+        "daisyui": "npm:daisyui@5.5.20",
+        "handlebars": "npm:handlebars@4.7.9",
         "ioredis": "npm:ioredis@5.11.0",
+        "lightningcss": "npm:lightningcss@1.32.0",
         "reflect-metadata": "npm:reflect-metadata@0.2.2",
         "rxjs": "npm:rxjs@7.8.2",
-        "sst": "npm:sst@4.14.3"
+        "sst": "npm:sst@4.14.3",
+        "tailwindcss": "npm:tailwindcss@4.3.0"
     },
     "allowScripts": {
-        "allow": ["npm:@nestjs/core@11.1.19", "npm:@nestjs/core@11.1.24", "npm:msgpackr-extract@3.0.4"],
+        "allow": ["npm:@nestjs/core@11.1.19", "npm:@nestjs/core@11.1.24", "npm:lightningcss@1.32.0", "npm:msgpackr-extract@3.0.4"],
         "deny": ["npm:msgpackr-extract@3.0.3"]
     },
     "tasks": {
@@ -54,6 +58,7 @@
         "lint": "deno lint",
         "typecheck": "deno check src/main.ts",
         "test": "deno test -A",
+        "test:coverage": "deno test -A --coverage=coverage && deno coverage coverage --include='src/'",
         "redis:local": "docker start local_redis || docker run --rm --detach --name local_redis -p 6379:6379 redis:7-alpine",
         "build:stage": "./scripts/deploy-image.sh -e stage",
         "build": "./scripts/deploy-image.sh -e prod",

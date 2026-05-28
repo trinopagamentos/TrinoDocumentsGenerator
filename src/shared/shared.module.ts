@@ -2,29 +2,21 @@
  * @file shared.module.ts
  * @description Módulo compartilhado que provê serviços de infraestrutura reutilizáveis.
  *
- * Centraliza o registro e a exportação de serviços que são utilizados por
- * múltiplos módulos da aplicação, evitando instanciação duplicada e
- * garantindo que o NestJS gerencie o ciclo de vida de cada serviço.
- *
  * Serviços expostos:
  * - {@link SkreenService}: renderização de HTML para PDF e imagem
  * - {@link S3Service}: upload de arquivos no AWS S3
+ * - {@link TailwindInlineService}: compilação de Tailwind/DaisyUI CSS inline
+ * - {@link TemplateService}: renderização de templates Handlebars
  */
 
 import { Module } from "@nestjs/common";
 import { SkreenService } from "@/shared/services/skreen.service.ts";
 import { S3Service } from "@/shared/services/s3.service.ts";
+import { TailwindInlineService } from "@/shared/services/tailwind-inline.service.ts";
+import { TemplateService } from "@/shared/services/template.service.ts";
 
-/** Lista de serviços gerenciados por este módulo (registrados e exportados) */
-const services = [SkreenService, S3Service];
+const services = [SkreenService, S3Service, TailwindInlineService, TemplateService];
 
-/**
- * Módulo compartilhado da aplicação.
- *
- * Importe `SharedModule` em qualquer feature module que precise de
- * `SkreenService` ou `S3Service`. O NestJS garantirá que apenas
- * uma instância de cada serviço seja criada (singleton por módulo).
- */
 @Module({
 	providers: [...services],
 	exports: [...services],

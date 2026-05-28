@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Comprovante</title>
+	<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+</head>
+<body>
+	<main class="flex flex-col gap-5 p-4">
+		{{> header title=title currentDate=currentDate}}
+		<section class="text-sm">
+			<h3 class="font-bold">Valor</h3>
+			<p class="text-xl">{{amount}}</p>
+		</section>
+		<section class="text-sm">
+			<h3 class="font-bold">Tipo de transação</h3>
+			<p>{{transaction_type}}</p>
+		</section>
+		<hr>
+		<section class="text-sm">
+			<h3 class="font-bold">Solicitante</h3>
+			<p>{{applicant_business_name}}</p>
+			<p><span>{{applicant_doc_type}}:</span> {{applicant_doc}}</p>
+		</section>
+		<hr>
+		<section class="text-sm">
+			<h3 class="font-bold">Chave Pix de Destino</h3>
+			<p>{{applicant_pix_key}}</p>
+		</section>
+		<section class="text-sm">
+			<h3 class="font-bold">Titular da conta de destino</h3>
+			<p>{{recipient_business_name}}</p>
+			<p><span>{{recipient_doc_type}}:</span> {{recipient_doc}}</p>
+		</section>
+		<hr>
+		<section class="text-sm">
+			<h3 class="font-bold">Taxa da operação</h3>
+			<p>{{fee_amount}}</p>
+		</section>
+		<section class="text-sm">
+			<h3 class="font-bold">IOF</h3>
+			<p>{{fee_iof}}</p>
+		</section>
+		<section class="text-sm">
+			<h3 class="font-bold">Custo Efetivo Total (CET)</h3>
+			<p>{{fee_cet}}</p>
+		</section>
+		<hr>
+		<section class="text-sm">
+			<h3 class="font-bold">ID da transação</h3>
+			<p>{{transaction_id}}</p>
+		</section>
+		{{> footer sac=sac}}
+	</main>
+</body>
+</html>
