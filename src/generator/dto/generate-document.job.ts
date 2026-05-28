@@ -17,8 +17,8 @@
 export interface PdfOptions {
 	/** @defaultValue "A4" */
 	pageSize?: "A4" | "A3" | "Letter";
-	/** Margem uniforme em milímetros. @defaultValue 20 */
-	marginMm?: number;
+	/** Margem em mm. Aceita shorthand CSS: `"20"`, `"20 30"`, `"10 20 30"`, `"10 20 30 40"`. @defaultValue 20 */
+	marginMm?: number | string;
 	/** Título do documento nos metadados do PDF. */
 	title?: string;
 	/** Autor do documento nos metadados do PDF. */
