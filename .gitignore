@@ -20,6 +20,7 @@ bin
 
 # build
 dist
+vendor
 
 # docker
 .dockerignore
