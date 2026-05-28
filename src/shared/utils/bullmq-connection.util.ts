@@ -24,10 +24,11 @@ export function createBullMqConnection(): ConnectionOptions {
 		// was added to AbstractConnector in 5.11.0, causing a false TS error.
 		return new Cluster([{ host, port }], {
 			dnsLookup: (address, callback) => callback(null, address),
-			enableReadyCheck: true,
-			retryDelayOnFailover: 100,
+			enableReadyCheck: false,
+			retryDelayOnFailover: 500,
 			clusterRetryStrategy: (times) => {
-				return Math.min(100 + times * 2, 2000);
+				if (times > 10) return null;
+				return Math.min(200 + times * 100, 3000);
 			},
 			redisOptions: {
 				connectTimeout: 20000,
@@ -35,18 +36,17 @@ export function createBullMqConnection(): ConnectionOptions {
 				maxRetriesPerRequest: null,
 				family: 4,
 				keepAlive: 1,
-				lazyConnect: true,
+				lazyConnect: false,
 				tls: {
 					checkServerIdentity: () => undefined,
 					rejectUnauthorized: false,
 				},
 				...(password && { password }),
 			},
-			enableOfflineQueue: false,
-			slotsRefreshTimeout: 10000,
-			slotsRefreshInterval: 5000,
-			retryDelayOnClusterDown: 300,
-			scaleReads: "slave",
+			enableOfflineQueue: true,
+			slotsRefreshTimeout: 15000,
+			retryDelayOnClusterDown: 1000,
+			scaleReads: "master",
 		}) as unknown as ConnectionOptions;
 	}
 	return { host, port, ...(password && { password }) };
