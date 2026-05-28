@@ -21,7 +21,4 @@ RUN deno install
 # Pre-cache de dependências
 RUN deno cache src/main.ts
 
-# Vendor deps para resolver WASM offline (import.meta.url vira file://)
-RUN deno vendor
-
 CMD ["task", "start"]

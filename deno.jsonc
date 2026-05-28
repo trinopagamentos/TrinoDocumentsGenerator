@@ -22,6 +22,7 @@
         }
     },
     "unstable": ["net"],
+    "vendor": true,
     "nodeModulesDir": "auto",
     "imports": {
         "@/": "./src/",
