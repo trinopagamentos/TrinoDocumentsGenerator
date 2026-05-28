@@ -1,6 +1,8 @@
 // eslint-disable-next-line @typescript-eslint/triple-slash-reference
 /// <reference path="./.sst/platform/config.d.ts" />
 
+import { execSync } from "node:child_process";
+
 const WORKER_BASE_NAME = "TrinoDocWorker";
 
 const getName = (...args: string[]) => [WORKER_BASE_NAME, ...args].join("_");
@@ -24,11 +26,34 @@ const vpsSecurityGroup = "sg-008bd8b15d6fd793e";
  *   - sem ECS
  */
 
-// Endpoints do ElastiCache Redis (cluster mode, TLS obrigatório)
-const REDIS_HOSTS = {
-	production: "clustercfg.product-trinocoreredisv2cluster-fbathhrz.xocefy.use1.cache.amazonaws.com",
-	stage: "clustercfg.t-stage-trinocoreredisv2cluster-badzbwfz.xocefy.use1.cache.amazonaws.com",
-};
+// Descobre o configuration endpoint do ElastiCache do TrinoCore via tags SST.
+// Evita endpoints hardcoded que ficam obsoletos quando o cluster é recriado.
+function lookupRedisHost(stage: string): string {
+	const arns: string[] = JSON.parse(
+		execSync(
+			`aws resourcegroupstaggingapi get-resources --profile trino --region us-east-1 ` +
+				`--resource-type-filters elasticache:replicationgroup ` +
+				`--tag-filters Key=sst:app,Values=trino-core Key=sst:stage,Values=${stage} ` +
+				`--query 'ResourceTagMappingList[].ResourceARN' --output json`,
+			{ encoding: "utf-8" },
+		),
+	);
+
+	if (arns.length === 0) throw new Error(`Redis cluster not found for stage: ${stage}`);
+
+	const groupId = arns[0].split(":replicationgroup:")[1];
+
+	const address: string = JSON.parse(
+		execSync(
+			`aws elasticache describe-replication-groups --profile trino --region us-east-1 ` +
+				`--replication-group-id ${groupId} ` +
+				`--query 'ReplicationGroups[0].ConfigurationEndpoint.Address' --output json`,
+			{ encoding: "utf-8" },
+		),
+	);
+
+	return address;
+}
 
 // const redisSecurityGroup = "sg-008bd8b15d6fd793e";
 const publicSubnetsByStage = {
@@ -76,7 +101,7 @@ export default $config({
 		// !   sst secret set TrinoDocWorker_RedisPassword "<password>"
 		const redisPasswordSecret = new sst.Secret(getName("RedisPassword"));
 
-		const REDIS_HOST = isProd ? REDIS_HOSTS.production : isStaging ? REDIS_HOSTS.stage : "localhost";
+		const REDIS_HOST = isCloud ? lookupRedisHost($app.stage) : "localhost";
 
 		// * ============ S3 (bucket compartilhado com o TrinoCore) ============
 		// ! O nome físico do bucket é publicado pelo TrinoCore via SSM
