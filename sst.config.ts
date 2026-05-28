@@ -1,9 +1,6 @@
 // eslint-disable-next-line @typescript-eslint/triple-slash-reference
 /// <reference path="./.sst/platform/config.d.ts" />
 
-import { execSync } from "node:child_process";
-import process from "node:process";
-
 const WORKER_BASE_NAME = "TrinoDocWorker";
 
 const getName = (...args: string[]) => [WORKER_BASE_NAME, ...args].join("_");
@@ -29,7 +26,9 @@ const vpsSecurityGroup = "sg-008bd8b15d6fd793e";
 
 // Descobre o configuration endpoint do ElastiCache do TrinoCore via tags SST.
 // Evita endpoints hardcoded que ficam obsoletos quando o cluster é recriado.
-function lookupRedisHost(stage: string): string {
+async function lookupRedisHost(stage: string): Promise<string> {
+	const { execSync } = await import("node:child_process");
+
 	const arns: string[] = JSON.parse(
 		execSync(
 			`aws resourcegroupstaggingapi get-resources --profile trino --region us-east-1 ` +
@@ -63,8 +62,8 @@ type StageConfig = {
 	publicSubnets: string[];
 	privateSubnets: string[];
 	clusterArn: string;
-	imageRepo?: string;
-	imageVersion?: string;
+	imageRepoEnvVar?: string;
+	imageVersionEnvVar?: string;
 	minTasks: number;
 	maxTasks: number;
 	cpuUtilization: number;
@@ -80,8 +79,8 @@ const stageConfigs: Record<string, StageConfig> = {
 		publicSubnets: ["subnet-0202cc44fb2076fa3", "subnet-0e48564b4ebf17019", "subnet-03d3af5f8e16ac6ad"],
 		privateSubnets: ["subnet-09a398774aabf81d4", "subnet-0d13602f7ce20b220"],
 		clusterArn: "arn:aws:ecs:us-east-1:841162676072:cluster/trino-core-production-TrinoCoreClusterCluster-bchmhrtf",
-		imageRepo: process.env.IMG_REPO_PROD,
-		imageVersion: process.env.IMG_VERSION_PROD,
+		imageRepoEnvVar: "IMG_REPO_PROD",
+		imageVersionEnvVar: "IMG_VERSION_PROD",
 		minTasks: 1,
 		maxTasks: 3,
 		cpuUtilization: 70,
@@ -95,8 +94,8 @@ const stageConfigs: Record<string, StageConfig> = {
 		publicSubnets: ["subnet-0202cc44fb2076fa3", "subnet-0e48564b4ebf17019", "subnet-03d3af5f8e16ac6ad"],
 		privateSubnets: ["subnet-024d8604eda430324", "subnet-0da0dac7506bea59d", "subnet-0b3ded358aa66ad2e"],
 		clusterArn: "arn:aws:ecs:us-east-1:841162676072:cluster/trino-core-stage-TrinoCoreClusterCluster-cofrkcwx",
-		imageRepo: process.env.IMG_REPO_STAGING,
-		imageVersion: process.env.IMG_VERSION_STAGING,
+		imageRepoEnvVar: "IMG_REPO_STAGING",
+		imageVersionEnvVar: "IMG_VERSION_STAGING",
 		minTasks: 1,
 		maxTasks: 1,
 		cpuUtilization: 70,
@@ -133,6 +132,8 @@ export default $config({
 		};
 	},
 	async run() {
+		const { default: process } = await import("node:process");
+
 		const stageConfig = stageConfigs[$app.stage.toLowerCase()] ?? stageConfigs.dev;
 		const { isProd, isCloud } = stageConfig;
 
@@ -142,7 +143,7 @@ export default $config({
 		// !   sst secret set TrinoDocWorker_RedisPassword "<password>"
 		const redisPasswordSecret = new sst.Secret(getName("RedisPassword"));
 
-		const REDIS_HOST = isCloud ? lookupRedisHost($app.stage) : "localhost";
+		const REDIS_HOST = isCloud ? await lookupRedisHost($app.stage) : "localhost";
 
 		// * ============ S3 (bucket compartilhado com o TrinoCore) ============
 		// ! O nome físico do bucket é publicado pelo TrinoCore via SSM
@@ -165,11 +166,10 @@ export default $config({
 		});
 
 		// * ============ Worker image ============
-		const image =
-			stageConfig.imageRepo && stageConfig.imageVersion
-				? `${stageConfig.imageRepo}:${stageConfig.imageVersion}`
-				: undefined;
-		const version = stageConfig.imageVersion ?? "dev";
+		const imageRepo = stageConfig.imageRepoEnvVar ? process.env[stageConfig.imageRepoEnvVar] : undefined;
+		const imageVersion = stageConfig.imageVersionEnvVar ? process.env[stageConfig.imageVersionEnvVar] : undefined;
+		const image = imageRepo && imageVersion ? `${imageRepo}:${imageVersion}` : undefined;
+		const version = imageVersion ?? "dev";
 
 		// * ============ Worker Service (sem load balancer — consumer puro) ============
 		const workerName = getName("Service");
