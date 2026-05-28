@@ -7,6 +7,8 @@ ENV TZ=$TZ
 ENV NODE_ENV=$NODE_ENV
 ENV TINI_SUBREAPER=1
 
+RUN apk add --no-cache font-noto ttf-freefont
+
 USER deno
 
 WORKDIR /app

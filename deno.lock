@@ -10,7 +10,7 @@
     "jsr:@std/internal@^1.0.14": "1.0.14",
     "jsr:@std/path@^1.1.5": "1.1.5",
     "jsr:@std/testing@1.0.19": "1.0.19",
-    "jsr:@tadashi/skreen@3.0.2": "3.0.2",
+    "jsr:@tadashi/skreen@3.0.4": "3.0.4",
     "npm:@aws-sdk/client-s3@3.1055.0": "3.1055.0",
     "npm:@aws-sdk/lib-storage@3.1055.0": "3.1055.0_@aws-sdk+client-s3@3.1055.0",
     "npm:@fulgur-rs/cli@0.16.0": "0.16.0",
@@ -68,8 +68,8 @@
         "jsr:@std/path"
       ]
     },
-    "@tadashi/skreen@3.0.2": {
-      "integrity": "25d1d9a41f8e7f110b792125bc6e9210235e52ab7a26d238adfe22e4ecb43a8f",
+    "@tadashi/skreen@3.0.4": {
+      "integrity": "bb862105b4619e18870fc42337dfaeef7157c3b46cb09942131cf0305896d04c",
       "dependencies": [
         "npm:@fulgur-rs/cli"
       ]
@@ -1131,7 +1131,7 @@
     "dependencies": [
       "jsr:@std/assert@1.0.19",
       "jsr:@std/testing@1.0.19",
-      "jsr:@tadashi/skreen@3.0.2",
+      "jsr:@tadashi/skreen@3.0.4",
       "npm:@aws-sdk/client-s3@3.1055.0",
       "npm:@aws-sdk/lib-storage@3.1055.0",
       "npm:@nestjs/bullmq@11.0.4",

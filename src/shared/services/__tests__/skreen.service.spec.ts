@@ -58,6 +58,24 @@ Deno.test("SkreenService.generatePdf: repassa opções corretamente para o rende
 	assertEquals(captured?.author, "Trino");
 });
 
+Deno.test("SkreenService.generatePdf: repassa css e fonts para o renderer", async () => {
+	let captured: SkreenPdfOptions | undefined;
+	const service = makeService({
+		renderPdf: (opts) => {
+			captured = opts;
+			return Promise.resolve(PDF_BYTES);
+		},
+	});
+
+	await service.generatePdf("<html></html>", {
+		css: ["/tmp/style.css"],
+		fonts: ["/tmp/font.ttf"],
+	});
+
+	assertEquals(captured?.css, ["/tmp/style.css"]);
+	assertEquals(captured?.fonts, ["/tmp/font.ttf"]);
+});
+
 Deno.test("SkreenService.generatePdf: propaga erros do renderer", async () => {
 	const service = makeService({
 		renderPdf: () => Promise.reject(new Error("render failed")),

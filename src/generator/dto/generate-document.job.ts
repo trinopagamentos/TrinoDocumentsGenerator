@@ -23,6 +23,22 @@ export interface PdfOptions {
 	title?: string;
 	/** Autor do documento nos metadados do PDF. */
 	author?: string;
+	/** Orientação paisagem. */
+	landscape?: boolean;
+	/** Tag de idioma BCP 47, ex: `"pt-BR"`. */
+	language?: string;
+	/** Caminhos absolutos para arquivos de fonte a embutir. */
+	fonts?: string[];
+	/** Caminhos absolutos para arquivos CSS a incluir. */
+	css?: string[];
+	/** Gerar outline a partir dos headings. */
+	bookmarks?: boolean;
+	/** Habilitar árvore de estrutura para acessibilidade. */
+	tagged?: boolean;
+	/** Conformidade PDF/UA-1 (implica `tagged` e `bookmarks`). */
+	pdfUa?: boolean;
+	/** Controla se as fontes Inter built-in são pré-incluídas. @defaultValue true */
+	useBuiltinFonts?: boolean;
 }
 
 /**

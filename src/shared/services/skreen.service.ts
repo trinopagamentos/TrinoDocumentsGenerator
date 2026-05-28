@@ -18,6 +18,14 @@ export class SkreenService {
 			marginMm: options?.marginMm ?? 20,
 			title: options?.title,
 			author: options?.author,
+			landscape: options?.landscape,
+			language: options?.language,
+			fonts: options?.fonts,
+			css: options?.css,
+			bookmarks: options?.bookmarks,
+			tagged: options?.tagged,
+			pdfUa: options?.pdfUa,
+			useBuiltinFonts: options?.useBuiltinFonts,
 		});
 	}
 

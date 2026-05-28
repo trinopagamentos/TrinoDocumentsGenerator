@@ -27,7 +27,7 @@ deno test -A src/generator/__tests__/generator.processor.spec.ts
 ## Architecture
 
 **TrinoDocWorker** is a pure queue consumer — no HTTP server, no database. It reads jobs from a BullMQ queue backed by
-Redis, renders HTML to PDF or image via headless Chromium, uploads the result to S3, and returns the public URL as the
+Redis, renders HTML to PDF or image via `@tadashi/skreen`, uploads the result to S3, and returns the public URL as the
 job result.
 
 ```
@@ -41,7 +41,7 @@ The app is bootstrapped with `NestFactory.createApplicationContext` (no HTTP bin
 **Job processing pipeline** (`src/generator/generator.processor.ts`):
 
 1. `GeneratorProcessor.process()` receives a `GenerateDocumentJobData` job
-2. Delegates to `PuppeteerService.generatePdf()` or `generateImage()` based on `documentType`
+2. Delegates to `SkreenService.generatePdf()` or `generateImage()` based on `documentType`
 3. Calls `S3Service.upload()` with the resulting buffer
 4. Returns `GenerateDocumentJobResult` with URL, userId, and completedAt
 
@@ -50,11 +50,6 @@ The app is bootstrapped with `NestFactory.createApplicationContext` (no HTTP bin
 - `redis://` URL → standalone IORedis connection
 - `rediss://` URL → IORedis `Cluster` with TLS (AWS ElastiCache)
 - The `{bull}` key prefix is applied only in cluster mode
-
-**Chromium selection** (`src/shared/services/puppeteer.service.ts`):
-
-- If `LOCAL_CHROMIUM_PATH` is set, uses it (local dev)
-- Otherwise uses `@sparticuz/chromium` binary (Docker/Lambda)
 
 ### Module structure
 

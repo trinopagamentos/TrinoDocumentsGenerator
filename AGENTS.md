@@ -56,12 +56,12 @@ storage, and Puppeteer-based PDF generation. No database and no HTTP server are 
 - Failed jobs should be handled with retry/backoff strategies
 - Resources: [BullMQ Docs](https://docs.bullmq.io)
 
-### PDF Generation (Puppeteer + Chromium)
+### PDF/Image Generation (@tadashi/skreen)
 
-- Use `puppeteer-core` with `@sparticuz/chromium` for serverless/container environments
-- Generate PDFs from URLs or HTML content via headless Chromium
-- Handle browser lifecycle carefully: launch, use, and close within the job scope
-- Log page URL/content, generation start, result size, and any errors
+- Use `@tadashi/skreen` (JSR: `jsr:@tadashi/skreen`) to generate PDFs and images from HTML
+- Inject `SkreenService`; call `generatePdf()` or `generateImage()` based on `documentType`
+- Handle service lifecycle via NestJS DI — no manual browser management needed
+- Log generation start, result size, and any errors
 
 ### Redis Pub/Sub
 
@@ -141,29 +141,25 @@ export class GeneratorProcessor extends WorkerHost {
 }
 ```
 
-## Puppeteer Pattern
+## SkreenService Pattern
 
 ```typescript
 @Injectable()
-export class PuppeteerService {
-	private readonly logger = new Logger(PuppeteerService.name);
+export class SkreenService {
+	private readonly logger = new Logger(SkreenService.name);
 
-	async generatePdf(url: string): Promise<Buffer> {
-		const executablePath = await chromium.executablePath();
-		const browser = await puppeteer.launch({
-			args: chromium.args,
-			executablePath,
-			headless: chromium.headless,
-		});
-		try {
-			const page = await browser.newPage();
-			await page.goto(url, { waitUntil: "networkidle0" });
-			const pdf = await page.pdf({ format: "A4" });
-			this.logger.log({ msg: "PDF generated", url, size: pdf.length });
-			return Buffer.from(pdf);
-		} finally {
-			await browser.close();
-		}
+	async generatePdf(html: string, options?: PdfOptions): Promise<Uint8Array> {
+		this.logger.log({ msg: "PDF generation started" });
+		const result = await this._renderPdf(html, options);
+		this.logger.log({ msg: "PDF generated", size: result.length });
+		return result;
+	}
+
+	async generateImage(html: string, options?: ImageOptions): Promise<Uint8Array> {
+		this.logger.log({ msg: "Image generation started" });
+		const result = await this._renderImage(html, options);
+		this.logger.log({ msg: "Image generated", size: result.length });
+		return result;
 	}
 }
 ```
@@ -177,13 +173,13 @@ typecheck → unit tests
 - [NestJS Docs](https://docs.nestjs.com)
 - [BullMQ Docs](https://docs.bullmq.io)
 - [SST Docs](https://sst.dev/docs)
-- [Puppeteer Docs](https://pptr.dev)
+- [skreen JSR](https://jsr.io/@tadashi/skreen/doc)
 - [Deno Docs](https://docs.deno.com)
 
 ## Success Metrics
 
 - ✅ Jobs are consumed and processed from BullMQ queue
-- ✅ PDFs are generated via Puppeteer + Chromium
+- ✅ PDFs/images are generated via @tadashi/skreen
 - ✅ Files are uploaded to S3 with error handling
 - ✅ Redis publish fires on successful job completion
 - ✅ Structured logs present at every step with job ID and metadata
