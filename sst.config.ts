@@ -2,6 +2,7 @@
 /// <reference path="./.sst/platform/config.d.ts" />
 
 import { execSync } from "node:child_process";
+import process from "node:process";
 
 const WORKER_BASE_NAME = "TrinoDocWorker";
 
@@ -55,30 +56,74 @@ function lookupRedisHost(stage: string): string {
 	return address;
 }
 
-// const redisSecurityGroup = "sg-008bd8b15d6fd793e";
-const publicSubnetsByStage = {
-	production: ["subnet-0202cc44fb2076fa3", "subnet-0e48564b4ebf17019", "subnet-03d3af5f8e16ac6ad"],
-	stage: ["subnet-0202cc44fb2076fa3", "subnet-0e48564b4ebf17019", "subnet-03d3af5f8e16ac6ad"],
-}
+type StageConfig = {
+	isProtected: boolean;
+	isProd: boolean;
+	isCloud: boolean;
+	publicSubnets: string[];
+	privateSubnets: string[];
+	clusterArn: string;
+	imageRepo?: string;
+	imageVersion?: string;
+	minTasks: number;
+	maxTasks: number;
+	cpuUtilization: number;
+	memoryUtilization: number;
+	useSpotCapacity: boolean;
+};
 
-const privateSubnetsByStage = {
-	production: ["subnet-09a398774aabf81d4", "subnet-0d13602f7ce20b220"],
-	stage: ["subnet-024d8604eda430324", "subnet-0da0dac7506bea59d", "subnet-0b3ded358aa66ad2e"],
-}
-
-const protectedStages = ["production", "stage"];
-
-// ARN do cluster ECS do TrinoCore (reutilizado pelo worker para economizar recursos)
-const TRINO_CORE_CLUSTER_ARN = {
-	production: "arn:aws:ecs:us-east-1:841162676072:cluster/trino-core-production-TrinoCoreClusterCluster-bchmhrtf",
-	stage: "arn:aws:ecs:us-east-1:841162676072:cluster/trino-core-stage-TrinoCoreClusterCluster-cofrkcwx",
+const stageConfigs: Record<string, StageConfig> = {
+	production: {
+		isProtected: true,
+		isProd: true,
+		isCloud: true,
+		publicSubnets: ["subnet-0202cc44fb2076fa3", "subnet-0e48564b4ebf17019", "subnet-03d3af5f8e16ac6ad"],
+		privateSubnets: ["subnet-09a398774aabf81d4", "subnet-0d13602f7ce20b220"],
+		clusterArn: "arn:aws:ecs:us-east-1:841162676072:cluster/trino-core-production-TrinoCoreClusterCluster-bchmhrtf",
+		imageRepo: process.env.IMG_REPO_PROD,
+		imageVersion: process.env.IMG_VERSION_PROD,
+		minTasks: 1,
+		maxTasks: 3,
+		cpuUtilization: 70,
+		memoryUtilization: 70,
+		useSpotCapacity: false,
+	},
+	stage: {
+		isProtected: true,
+		isProd: false,
+		isCloud: true,
+		publicSubnets: ["subnet-0202cc44fb2076fa3", "subnet-0e48564b4ebf17019", "subnet-03d3af5f8e16ac6ad"],
+		privateSubnets: ["subnet-024d8604eda430324", "subnet-0da0dac7506bea59d", "subnet-0b3ded358aa66ad2e"],
+		clusterArn: "arn:aws:ecs:us-east-1:841162676072:cluster/trino-core-stage-TrinoCoreClusterCluster-cofrkcwx",
+		imageRepo: process.env.IMG_REPO_STAGING,
+		imageVersion: process.env.IMG_VERSION_STAGING,
+		minTasks: 1,
+		maxTasks: 1,
+		cpuUtilization: 70,
+		memoryUtilization: 70,
+		useSpotCapacity: true,
+	},
+	dev: {
+		isProtected: false,
+		isProd: false,
+		isCloud: false,
+		publicSubnets: [],
+		privateSubnets: [],
+		clusterArn: "",
+		minTasks: 1,
+		maxTasks: 1,
+		cpuUtilization: 70,
+		memoryUtilization: 70,
+		useSpotCapacity: false,
+	},
 };
 
 export default $config({
 	app(input) {
+		const cfg = stageConfigs[input?.stage ?? "dev"] ?? stageConfigs.dev;
 		return {
 			name: "trino-doc-worker",
-			removal: protectedStages.includes(input?.stage) ? "retain" : "remove",
+			removal: cfg.isProtected ? "retain" : "remove",
 			home: "aws",
 			providers: {
 				aws: {
@@ -88,12 +133,8 @@ export default $config({
 		};
 	},
 	async run() {
-		const { default: process } = await import("node:process");
-		const prodStages = ["production", "prod"];
-		const stagingStages = ["stage"];
-		const isProd = prodStages.includes($app.stage.toLowerCase());
-		const isStaging = stagingStages.includes($app.stage.toLowerCase());
-		const isCloud = isProd || isStaging;
+		const stageConfig = stageConfigs[$app.stage.toLowerCase()] ?? stageConfigs.dev;
+		const { isProd, isCloud } = stageConfig;
 
 		// * ============ Redis (compartilhado com o TrinoCore) ============
 		// ! O worker consome filas BullMQ do mesmo Redis onde o TrinoCore publica
@@ -112,33 +153,23 @@ export default $config({
 		const bucket = sst.aws.Bucket.get(getName("Bucket"), trinoBucketName);
 
 		// * ============ ECS Cluster (reutiliza o cluster do TrinoCore) ============
-		const publicSubnets = isProd ? publicSubnetsByStage.production : publicSubnetsByStage.stage;
-		const privateSubnets = isProd ? privateSubnetsByStage.production : privateSubnetsByStage.stage;
-		const clusterArn = isProd ? TRINO_CORE_CLUSTER_ARN.production : TRINO_CORE_CLUSTER_ARN.stage;
 		const clusterName = getName("Cluster");
 		const cluster = sst.aws.Cluster.get(clusterName, {
-			id: clusterArn,
+			id: stageConfig.clusterArn,
 			vpc: {
 				id: vpcId,
 				securityGroups: [vpsSecurityGroup],
-				loadBalancerSubnets: [...publicSubnets],
-				containerSubnets: [...privateSubnets],
+				loadBalancerSubnets: [...stageConfig.publicSubnets],
+				containerSubnets: [...stageConfig.privateSubnets],
 			},
 		});
 
 		// * ============ Worker image ============
-		let image: string | undefined;
-		let version = "dev";
-
-		if (isStaging && process.env.IMG_REPO_STAGING && process.env.IMG_VERSION_STAGING) {
-			image = `${process.env.IMG_REPO_STAGING}:${process.env.IMG_VERSION_STAGING}`;
-			version = process.env.IMG_VERSION_STAGING ?? "not-defined";
-		}
-
-		if (isProd && process.env.IMG_REPO_PROD && process.env.IMG_VERSION_PROD) {
-			image = `${process.env.IMG_REPO_PROD}:${process.env.IMG_VERSION_PROD}`;
-			version = process.env.IMG_VERSION_PROD ?? "not-defined";
-		}
+		const image =
+			stageConfig.imageRepo && stageConfig.imageVersion
+				? `${stageConfig.imageRepo}:${stageConfig.imageVersion}`
+				: undefined;
+		const version = stageConfig.imageVersion ?? "dev";
 
 		// * ============ Worker Service (sem load balancer — consumer puro) ============
 		const workerName = getName("Service");
@@ -166,12 +197,12 @@ export default $config({
 				LOCAL_CHROMIUM_PATH: isCloud ? "" : (process.env?.LOCAL_CHROMIUM_PATH ?? ""),
 			},
 			scaling: {
-				min: 1,
-				max: isProd ? 3 : 1,
-				cpuUtilization: 70,
-				memoryUtilization: 70,
+				min: stageConfig.minTasks,
+				max: stageConfig.maxTasks,
+				cpuUtilization: stageConfig.cpuUtilization,
+				memoryUtilization: stageConfig.memoryUtilization,
 			},
-			capacity: isProd ? undefined : "spot", // usar "spot" é mais barato para testes e desenvolvimento
+			capacity: stageConfig.useSpotCapacity ? "spot" : undefined,
 			dev: {
 				command: "deno task start:watch",
 			},
@@ -181,7 +212,7 @@ export default $config({
 					args.networkConfiguration = {
 						...args.networkConfiguration,
 						assignPublicIp: false,
-						subnets: [...publicSubnets, ...privateSubnets],
+						subnets: [...stageConfig.publicSubnets, ...stageConfig.privateSubnets],
 					};
 				},
 			},
