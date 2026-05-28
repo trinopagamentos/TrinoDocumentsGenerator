@@ -1,8 +1,9 @@
 import { Injectable, Logger } from "@nestjs/common";
+import { transform } from "lightningcss";
+import { Buffer } from "node:buffer";
 import { readFile } from "node:fs/promises";
 import { createRequire } from "node:module";
 import { dirname, resolve } from "node:path";
-import { transform } from "lightningcss";
 
 @Injectable()
 export class TailwindInlineService {
