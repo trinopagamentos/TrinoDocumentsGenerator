@@ -37,8 +37,6 @@ export interface PdfOptions {
 	tagged?: boolean;
 	/** Conformidade PDF/UA-1 (implica `tagged` e `bookmarks`). */
 	pdfUa?: boolean;
-	/** Controla se as fontes Inter built-in são pré-incluídas. @defaultValue true */
-	useBuiltinFonts?: boolean;
 }
 
 /**
@@ -51,8 +49,8 @@ export interface ImageOptions {
 	height?: number;
 	/** Device-pixel ratio. @defaultValue 2.0 */
 	scale?: number;
-	/** Fontes adicionais a embutir (bytes raw TTF/OTF). */
-	fonts?: Uint8Array[];
+	/** Fontes adicionais a embutir. Aceita caminhos de arquivo (string) ou bytes raw TTF/OTF (Uint8Array). */
+	fonts?: Array<string | Uint8Array>;
 }
 
 // ---------------------------------------------------------------------------

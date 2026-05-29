@@ -7,8 +7,10 @@
  * {@link SkreenService} e o armazenamento ao {@link S3Service}.
  */
 
+import fs from "node:fs/promises";
 import { Logger } from "@nestjs/common";
 import { Processor, WorkerHost } from "@nestjs/bullmq";
+import { ConfigService } from "@nestjs/config";
 import { Job } from "bullmq";
 import { SkreenService } from "@/shared/services/skreen.service.ts";
 import { S3Service } from "@/shared/services/s3.service.ts";
@@ -37,6 +39,7 @@ export class GeneratorProcessor extends WorkerHost {
 		private readonly s3Service: S3Service,
 		private readonly templateService: TemplateService,
 		private readonly tailwindInlineService: TailwindInlineService,
+		private readonly config: ConfigService,
 	) {
 		super();
 	}
@@ -54,6 +57,12 @@ export class GeneratorProcessor extends WorkerHost {
 		try {
 			// Etapa 1: resolver o HTML final
 			const htmlContent = await this.resolveHtml(job);
+
+			if (this.config.get<boolean>("debugSaveHtml")) {
+				const debugPath = `/debug/${job.id}.html`;
+				await fs.writeFile(debugPath, htmlContent, "utf-8");
+				this.logger.debug({ msg: "HTML saved", path: debugPath, jobId: job.id });
+			}
 
 			// Etapa 2: renderizar o HTML em bytes binários (PDF ou imagem)
 			const buffer = job.data.documentType === "pdf"

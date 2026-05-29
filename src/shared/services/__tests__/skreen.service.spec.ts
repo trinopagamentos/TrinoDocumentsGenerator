@@ -38,24 +38,10 @@ Deno.test("SkreenService.generatePdf: usa defaults quando options não é fornec
 
 	assertEquals(captured?.pageSize, "A4");
 	assertEquals(captured?.marginMm, 20);
-	// useBuiltinFonts defaults to true, so font-face CSS is injected before the HTML
 	assertEquals(typeof captured?.data, "string");
-	assertEquals((captured?.data as string).includes("@font-face"), true);
+	assertEquals((captured?.data as string).includes("background:white"), true);
+	assertEquals((captured?.data as string).includes("Roboto"), true);
 	assertEquals((captured?.data as string).includes("<html></html>"), true);
-});
-
-Deno.test("SkreenService.generatePdf: não injeta font-faces quando useBuiltinFonts é false", async () => {
-	let captured: SkreenPdfOptions | undefined;
-	const service = makeService({
-		renderPdf: (opts) => {
-			captured = opts;
-			return Promise.resolve(PDF_BYTES);
-		},
-	});
-
-	await service.generatePdf("<html></html>", { useBuiltinFonts: false });
-
-	assertEquals(captured?.data, "<html></html>");
 });
 
 Deno.test("SkreenService.generatePdf: repassa opções corretamente para o renderer", async () => {
@@ -90,7 +76,7 @@ Deno.test("SkreenService.generatePdf: repassa css e fonts para o renderer", asyn
 	});
 
 	assertEquals(captured?.css, ["/tmp/style.css"]);
-	assertEquals(captured?.fonts, ["/tmp/font.ttf"]);
+	assertEquals((captured?.fonts as string[]).includes("/tmp/font.ttf"), true);
 });
 
 Deno.test("SkreenService.generatePdf: propaga erros do renderer", async () => {

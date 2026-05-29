@@ -5,16 +5,14 @@
     "jsr:@std/assert@^1.0.19": "1.0.19",
     "jsr:@std/async@^1.4.0": "1.4.0",
     "jsr:@std/data-structures@^1.1.0": "1.1.0",
-    "jsr:@std/encoding@1.0.10": "1.0.10",
     "jsr:@std/fs@^1.0.24": "1.0.24",
     "jsr:@std/internal@^1.0.12": "1.0.14",
     "jsr:@std/internal@^1.0.14": "1.0.14",
     "jsr:@std/path@^1.1.5": "1.1.5",
     "jsr:@std/testing@1.0.19": "1.0.19",
-    "jsr:@tadashi/skreen@3.0.9": "3.0.9",
+    "jsr:@tadashi/skreen@4.0.0": "4.0.0",
     "npm:@aws-sdk/client-s3@3.1056.0": "3.1056.0",
     "npm:@aws-sdk/lib-storage@3.1056.0": "3.1056.0_@aws-sdk+client-s3@3.1056.0",
-    "npm:@fulgur-rs/cli@0.16.0": "0.16.0",
     "npm:@nestjs/bullmq@11.0.4": "11.0.4_@nestjs+common@11.1.24__reflect-metadata@0.2.2__rxjs@7.8.2_@nestjs+core@11.1.24__@nestjs+common@11.1.24___reflect-metadata@0.2.2___rxjs@7.8.2__reflect-metadata@0.2.2__rxjs@7.8.2_bullmq@5.77.6",
     "npm:@nestjs/common@11.1.24": "11.1.24_reflect-metadata@0.2.2_rxjs@7.8.2",
     "npm:@nestjs/config@4.0.4": "4.0.4_@nestjs+common@11.1.24__reflect-metadata@0.2.2__rxjs@7.8.2_rxjs@7.8.2_reflect-metadata@0.2.2",
@@ -27,7 +25,7 @@
     "npm:lightningcss@1.32.0": "1.32.0",
     "npm:reflect-metadata@0.2.2": "0.2.2",
     "npm:rxjs@7.8.2": "7.8.2",
-    "npm:sst@4.14.3": "4.14.3",
+    "npm:sst@4.15.2": "4.15.2",
     "npm:tailwindcss@4.3.0": "4.3.0"
   },
   "jsr": {
@@ -42,9 +40,6 @@
     },
     "@std/data-structures@1.1.0": {
       "integrity": "c35ae4ad5d8e41a38573c2fe3e19b18ea2505f63cfea201edcb8720aca1f7f58"
-    },
-    "@std/encoding@1.0.10": {
-      "integrity": "8783c6384a2d13abd5e9e87a7ae0520a30e9f56aeeaa3bdf910a3eaaf5c811a1"
     },
     "@std/fs@1.0.24": {
       "integrity": "f3061b45b81673a2bece689da041df32d174be064c89eb6397fb5718d3fb7877",
@@ -72,12 +67,8 @@
         "jsr:@std/path"
       ]
     },
-    "@tadashi/skreen@3.0.9": {
-      "integrity": "754472a541cc55e853ac05b3ba0042a471a8f94697db24da6454d9aa0d759ad5",
-      "dependencies": [
-        "jsr:@std/encoding",
-        "npm:@fulgur-rs/cli"
-      ]
+    "@tadashi/skreen@4.0.0": {
+      "integrity": "ff4dc984b55d9d36f4fbdd048a52d227f6cf0f3d1693776375a95db325a6c179"
     }
   },
   "npm": {
@@ -142,8 +133,8 @@
         "tslib"
       ]
     },
-    "@aws-sdk/client-lambda@3.1053.0": {
-      "integrity": "sha512-rIauaabLL/2C/5GYW6r/j4ptULlsTw2D/81leZ0nrjQVu9LSuAUZBJYLJpMsQobhDon4gfkdMIObOxQY1AHhRA==",
+    "@aws-sdk/client-lambda@3.1056.0": {
+      "integrity": "sha512-ReG6Pj7yZKyh+wD2uG+6PP5LcAet2hArf7rLNokoUZCRxEBf0kbRtvfCSAMAoXbTXLKhIwbH6/6E1FbJDxDmLQ==",
       "dependencies": [
         "@aws-crypto/sha256-browser",
         "@aws-crypto/sha256-js",
@@ -439,48 +430,6 @@
     },
     "@borewit/text-codec@0.2.2": {
       "integrity": "sha512-DDaRehssg1aNrH4+2hnj1B7vnUGEjU6OIlyRdkMd0aUdIUvKXrJfXsy8LVtXAy7DRvYVluWbMspsRhz2lcW0mQ=="
-    },
-    "@fulgur-rs/cli-darwin-arm64@0.16.0": {
-      "integrity": "sha512-/q9WLjfe6xpjyY9UEM1o9fsviPOO11CxTOs/UZR4K4DFd3M9WqJyMXH6EaJLKgDFJVvnkXA5wk/GGmA0+x3ogQ==",
-      "os": ["darwin"],
-      "cpu": ["arm64"]
-    },
-    "@fulgur-rs/cli-darwin-x64@0.16.0": {
-      "integrity": "sha512-2rlKgWELjDkLC8vc9w1VkFFKU3q4XZfpBvehAnCGjbEQt2mmZSUCmxcHQXX0NShgxpy7OSaqm+kgmSh8eDY35A==",
-      "os": ["darwin"],
-      "cpu": ["x64"]
-    },
-    "@fulgur-rs/cli-linux-arm64@0.16.0": {
-      "integrity": "sha512-l6tpi9TVZ9XpFu6cSuJ4/knZS8mz2kXZH2EeiwCxktpOiJO2jVYoIDpoufspvRnv/EN0nHS7YXCW++8yW/Atxg==",
-      "os": ["linux"],
-      "cpu": ["arm64"]
-    },
-    "@fulgur-rs/cli-linux-x64-musl@0.16.0": {
-      "integrity": "sha512-ZMHRlkZlTEmXjC2t/KGcePdxwFdBHgqbZ+18L4C37xcX8MWqVoOM3snYmezAxtM8X2cIjYIbDCjrg1T4P351tw==",
-      "os": ["linux"],
-      "cpu": ["x64"]
-    },
-    "@fulgur-rs/cli-linux-x64@0.16.0": {
-      "integrity": "sha512-jjxbm0b6MtlZXX4TmBEMkTkGvtI61BbuZNV22XZs/CguStB34/PnhONNuQCGSbXpVt/5FSd/m3YgGUmK1n2JTw==",
-      "os": ["linux"],
-      "cpu": ["x64"]
-    },
-    "@fulgur-rs/cli-win32-x64@0.16.0": {
-      "integrity": "sha512-g6a4hOnvJEMytQ0xF3HbzpC1f4d1ikeysEpPaAzGAdcpM3I1+QNhx6FqbPDJoQB6FzGbKehfl/URSS1yzIm0dQ==",
-      "os": ["win32"],
-      "cpu": ["x64"]
-    },
-    "@fulgur-rs/cli@0.16.0": {
-      "integrity": "sha512-xVOzdnzQntsm7Pj18x7jAPJn4osqNj5wJfQA5kC3tpLVjXRBG2rrdlV1MKdK+O8DYprZJ8cf0fyOob540LyRXg==",
-      "optionalDependencies": [
-        "@fulgur-rs/cli-darwin-arm64",
-        "@fulgur-rs/cli-darwin-x64",
-        "@fulgur-rs/cli-linux-arm64",
-        "@fulgur-rs/cli-linux-x64",
-        "@fulgur-rs/cli-linux-x64-musl",
-        "@fulgur-rs/cli-win32-x64"
-      ],
-      "bin": true
     },
     "@ioredis/commands@1.10.0": {
       "integrity": "sha512-UmeW7z4LfctwoQ5wkhVzgq8tXkreED2xZGpX+Bg+zA+WJFZCT6c062AfCK/Dfk81xZnnwdhJCUMkitihRaoC2Q=="
@@ -1007,48 +956,48 @@
     "source-map@0.6.1": {
       "integrity": "sha512-UjgapumWlbMhkBgzT7Ykc5YXUT46F0iKu8SGXq0bcwP5dz/h0Plj6enJqjz1Zbq2l5WaqYnrVbwWOWMyF3F47g=="
     },
-    "sst-darwin-arm64@4.14.3": {
-      "integrity": "sha512-QN2kFzhzFDOWHIaa4KjjGfSLyHe2f2DBcZUiE9X0Lg+BVVjKuNvj800zkN3zZ6UwbCRkSP2f0GlUltiIYk5hRw==",
+    "sst-darwin-arm64@4.15.2": {
+      "integrity": "sha512-jTOaR9+tCOQoEDcPL0i59Zf5nmPv3C91Lt2wvikyBnq+Zibpen1zsQaQ3S3v5R0MAH+AqlBMBkXx3vD9dVve0Q==",
       "os": ["darwin"],
       "cpu": ["arm64"]
     },
-    "sst-darwin-x64@4.14.3": {
-      "integrity": "sha512-JHQGQwLkDApm7slvhyM3nO10Lcaeo0kBSpI+TBupr6a2mKsUJxD1xiN9ywwtSIIxczf+7f8q6MJltMehzzltZg==",
+    "sst-darwin-x64@4.15.2": {
+      "integrity": "sha512-KZ/DJBdN3kDnNSXr7hPeR10dnCNpSLaIn1gjXvXO/rgMeawfaaPA74zU1Su0yjA47fbIC3nH5TT2+S/6vFZD+A==",
       "os": ["darwin"],
       "cpu": ["x64"]
     },
-    "sst-linux-arm64@4.14.3": {
-      "integrity": "sha512-UC3psoMeqIo9Crtg/vuoggoQLkol7ntNNgxJSqvQWxNCPNXjoQdSzW31zy92cSTJDt9yLtKWYw+S/TXhxlajzw==",
+    "sst-linux-arm64@4.15.2": {
+      "integrity": "sha512-zT1+suSr5DRCTTPVUo8LmJjXnFxXj49CRRMoGnBq4QBeeyzOaw/L3uwZ4GDn91+s7kGRMpykhsSPBgplBETM8w==",
       "os": ["linux"],
       "cpu": ["arm64"]
     },
-    "sst-linux-x64@4.14.3": {
-      "integrity": "sha512-W0V+roE86p3nXK5tIVLIAYJogz8FQD9Nbv+aBKCyjEC8ch/7jxQFVU8MDDv1S9PNI1ESuofAdROw/4h7+T9qyg==",
+    "sst-linux-x64@4.15.2": {
+      "integrity": "sha512-Da7FI3ziaTfLsWx/vTuUPlSDfNIF2LHuEPugp/Y4w5pBTJ3cYbBhMhPC6KnXI46itvOfDYHdsFdVrDKJ8dpEsQ==",
       "os": ["linux"],
       "cpu": ["x64"]
     },
-    "sst-linux-x86@4.14.3": {
-      "integrity": "sha512-ftY0OWbv7eKDpWVZUTlMbbp0UQSaZhrFwaF/FIF0HM4uwOmbDpRREvxuD+w6IWrBeGLKDH/RSBvz68WnGIBhEg==",
+    "sst-linux-x86@4.15.2": {
+      "integrity": "sha512-ZzJPul4U++Cg/UJmJVSUV0ndMbcImUbnqwxYhf5EaQLaO+se6AX52uIZBlQTxIQ6rrnHAq5Kw7WUWur7A/BZQA==",
       "os": ["linux"],
       "cpu": ["x86"]
     },
-    "sst-win32-arm64@4.14.3": {
-      "integrity": "sha512-tAuhkz0aRq7dldSFS3GPvvMfatlYEt+VQvqSRvRu0sTCmSN+lnMGN3DhDP6cUx2kEJd9vYc2bhqiefxQWFydZw==",
+    "sst-win32-arm64@4.15.2": {
+      "integrity": "sha512-DrovhJEZgo+W9s/AL1CdBeqdyG9nu8e8N7S5yxYFgoPJVti6mBDBZKY9HjYjkHXBYOPw6slcdHlh64DqDRzI9g==",
       "os": ["win32"],
       "cpu": ["arm64"]
     },
-    "sst-win32-x64@4.14.3": {
-      "integrity": "sha512-Su0DfrE5mTNo2al2EzTqEiuOd6Oq6M9mM8BPYNnTosCaGhA6YkM+5JZ2BVrPO36mzRmRw0/j4mPssI1dY7TynA==",
+    "sst-win32-x64@4.15.2": {
+      "integrity": "sha512-tywny4cRVFJUAHGsSxeIH2p/4AEigJks5UjC0HuP0kr/AyWeuCHglXsdf4JGMxSrHY6phdcSLUqhPKruZsjOwA==",
       "os": ["win32"],
       "cpu": ["x64"]
     },
-    "sst-win32-x86@4.14.3": {
-      "integrity": "sha512-dkiYRWOLYpNfCBSybfYSeeKP4ddPXCIGtVwUPgpJWQGQiUfvmVIsO1bidqxADyvIMKK326c1ASrceRo4DuobNw==",
+    "sst-win32-x86@4.15.2": {
+      "integrity": "sha512-p3TKMSP8t6K+h54dZB/AAu1LTkhjZ4Zn+h5x4nTzpAery7VzBxYseA/9F/DnAbck0pfHRsu3TBYtyHJsvCFJ0A==",
       "os": ["win32"],
       "cpu": ["x86"]
     },
-    "sst@4.14.3": {
-      "integrity": "sha512-L1WrUB7WrMxhqwMbeq1kvz9/6dFlv/IkYWvqdlirpDOACRBpB/5jqAkyZwrgfmDKJ7ho3xHlo3QQC6EWtPg/oQ==",
+    "sst@4.15.2": {
+      "integrity": "sha512-PJX4rVQ66g1NgzWucm+Zelv0S5/hhqT5DkedKPb6IZSxyLz0R5r9hI2xO5ITS9hSY8IdUeJl1WMMca8f3vNd9Q==",
       "dependencies": [
         "@aws/durable-execution-sdk-js",
         "aws4fetch",
@@ -1136,7 +1085,7 @@
     "dependencies": [
       "jsr:@std/assert@1.0.19",
       "jsr:@std/testing@1.0.19",
-      "jsr:@tadashi/skreen@3.0.9",
+      "jsr:@tadashi/skreen@4.0.0",
       "npm:@aws-sdk/client-s3@3.1056.0",
       "npm:@aws-sdk/lib-storage@3.1056.0",
       "npm:@nestjs/bullmq@11.0.4",
@@ -1151,7 +1100,7 @@
       "npm:lightningcss@1.32.0",
       "npm:reflect-metadata@0.2.2",
       "npm:rxjs@7.8.2",
-      "npm:sst@4.14.3",
+      "npm:sst@4.15.2",
       "npm:tailwindcss@4.3.0"
     ]
   }

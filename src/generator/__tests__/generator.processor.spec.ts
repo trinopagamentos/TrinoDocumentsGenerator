@@ -51,6 +51,8 @@ function makeMockTailwindService(opts?: { throwError?: Error }) {
 	};
 }
 
+const mockConfigService = { get: (_key: string) => false } as never;
+
 function makeProcessor(overrides?: {
 	skreen?: ReturnType<typeof makeMockSkreenService>;
 	s3?: ReturnType<typeof makeMockS3Service>;
@@ -62,6 +64,7 @@ function makeProcessor(overrides?: {
 		(overrides?.s3 ?? makeMockS3Service()) as never,
 		(overrides?.template ?? makeMockTemplateService()) as never,
 		(overrides?.tailwind ?? makeMockTailwindService()) as never,
+		mockConfigService,
 	);
 }
 

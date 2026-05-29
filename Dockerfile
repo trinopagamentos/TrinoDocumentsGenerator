@@ -15,6 +15,7 @@ WORKDIR /app
 
 COPY --chown=deno:deno src src
 COPY --chown=deno:deno template template
+COPY --chown=deno:deno fonts fonts
 COPY --chown=deno:deno deno.json* .
 COPY --chown=deno:deno deno.lock* .
 

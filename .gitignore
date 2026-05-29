@@ -27,3 +27,6 @@ vendor
 
 # localstuff
 .localstuff
+
+# debug -> output de HTML
+debug

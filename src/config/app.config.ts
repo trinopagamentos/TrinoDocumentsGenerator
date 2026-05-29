@@ -15,6 +15,9 @@ export interface AppConfig {
 
 	/** Ambiente de execução atual (ex: `development`, `production`) */
 	nodeEnv: string;
+
+	/** Quando `true`, salva o HTML final gerado em `/debug/<jobId>.html` (requer volume mount em Docker) */
+	debugSaveHtml: boolean;
 }
 
 export default (): AppConfig => {
@@ -32,5 +35,6 @@ export default (): AppConfig => {
 		awsRegion: process.env.AWS_REGION ?? "us-east-1",
 		generatorQueue: process.env.GENERATOR_QUEUE ?? "generator",
 		nodeEnv: process.env.NODE_ENV ?? "production",
+		debugSaveHtml: process.env.DEBUG_SAVE_HTML === "true",
 	};
 };
