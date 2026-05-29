@@ -144,6 +144,7 @@ export default $config({
 		const redisPasswordSecret = new sst.Secret(getName("RedisPassword"));
 
 		const REDIS_HOST = isCloud ? await lookupRedisHost($app.stage) : "localhost";
+		const REDIS_PORT = process.env?.REDIS_PORT ?? "6379";
 
 		// * ============ S3 (bucket compartilhado com o TrinoCore) ============
 		// ! O nome físico do bucket é publicado pelo TrinoCore via SSM
@@ -182,19 +183,18 @@ export default $config({
 				STAGE: $app.stage,
 				APP_VERSION: version,
 				REDIS_HOST,
-				REDIS_PORT: "6379",
+				REDIS_PORT,
 				REDIS_TLS: isCloud ? "true" : "false",
 				REDIS_CLUSTER_MODE: isCloud ? "true" : "false",
 				...(isCloud && { REDIS_PASSWORD: redisPasswordSecret.value }),
 				REDIS_URL: isCloud
 					? redisPasswordSecret.value.apply(
-						(pwd: string) => `rediss://:${encodeURIComponent(pwd)}@${REDIS_HOST}:6379`,
+						(pwd: string) => `rediss://:${encodeURIComponent(pwd)}@${REDIS_HOST}:${REDIS_PORT}`,
 					)
-					: "redis://localhost:6379",
+					: `redis://${REDIS_HOST}:${REDIS_PORT}`,
 				S3_BUCKET_NAME: bucket.name,
 				AWS_REGION: "us-east-1",
-				GENERATOR_QUEUE: "generator",
-				LOCAL_CHROMIUM_PATH: isCloud ? "" : (process.env?.LOCAL_CHROMIUM_PATH ?? ""),
+				GENERATOR_QUEUE: process.env?.GENERATOR_QUEUE ?? "generator",
 			},
 			scaling: {
 				min: stageConfig.minTasks,
