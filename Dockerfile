@@ -1,4 +1,4 @@
-FROM denoland/deno:debian-2.8.1
+FROM denoland/deno:alpine-2.8.1
 
 ARG TZ=America/Sao_Paulo
 ARG NODE_ENV=production
@@ -6,13 +6,6 @@ ARG NODE_ENV=production
 ENV TZ=$TZ
 ENV NODE_ENV=$NODE_ENV
 ENV TINI_SUBREAPER=1
-
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    fonts-noto \
-    fonts-freefont-ttf \
-    fontconfig \
-    && fc-cache -f \
-    && rm -rf /var/lib/apt/lists/*
 
 RUN mkdir -p /home/deno && chown deno:deno /home/deno
 
