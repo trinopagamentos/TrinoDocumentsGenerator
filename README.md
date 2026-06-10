@@ -16,14 +16,17 @@ O worker **não expõe nenhuma porta HTTP**.\
 
 ## Stack
 
-| Tecnologia                                                                      | Versão | Função                           |
-| ------------------------------------------------------------------------------- | ------ | -------------------------------- |
-| [Deno](https://deno.com)                                                        | 2.8    | Runtime TypeScript               |
-| [NestJS](https://nestjs.com)                                                    | 11     | Framework / DI / ciclo de vida   |
-| [BullMQ](https://docs.bullmq.io)                                                | 5      | Consumo de filas Redis           |
-| [@tadashi/skreen](https://jsr.io/@tadashi/skreen)                               | 1.1    | Renderer WASM (PDF + PNG)        |
-| [AWS SDK S3](https://docs.aws.amazon.com/AWSJavaScriptSDK/v3/latest/client/s3/) | 3      | Upload de arquivos               |
-| [SST](https://sst.dev)                                                          | 4      | Infraestrutura como código (IaC) |
+| Tecnologia                                                                      | Versão | Função                               |
+| ------------------------------------------------------------------------------- | ------ | ------------------------------------ |
+| [Deno](https://deno.com)                                                        | 2.8    | Runtime TypeScript                   |
+| [NestJS](https://nestjs.com)                                                    | 11     | Framework / DI / ciclo de vida       |
+| [BullMQ](https://docs.bullmq.io)                                                | 5      | Consumo de filas Redis               |
+| [@tadashi/skreen](https://jsr.io/@tadashi/skreen)                               | 4      | Renderer WASM (PDF + PNG)            |
+| [Tailwind CSS](https://tailwindcss.com)                                         | 4      | Pré-processamento de CSS server-side |
+| [daisyUI](https://daisyui.com)                                                  | 5      | Componentes CSS para os templates    |
+| [Handlebars](https://handlebarsjs.com)                                          | 4      | Templates HTML dos documentos        |
+| [AWS SDK S3](https://docs.aws.amazon.com/AWSJavaScriptSDK/v3/latest/client/s3/) | 3      | Upload de arquivos                   |
+| [SST](https://sst.dev)                                                          | 4      | Infraestrutura como código (IaC)     |
 
 ## Estrutura do projeto
 
@@ -41,6 +44,8 @@ src/
 ├── shared/
 │   ├── services/
 │   |    ├── skreen.service.ts          # Geração de PDF e imagem via @tadashi/skreen (WASM)
+│   |    ├── template.service.ts        # Renderização de templates HTML com Handlebars
+│   |    ├── tailwind-inline.service.ts # Pré-processamento de Tailwind CSS v4 + daisyUI server-side
 │   |    └── s3.service.ts              # Upload de arquivos no AWS S3
 │   ├── utils/
 │   |    └── bullmq-connection.util.ts  # Fábrica de conexão BullMQ (standalone e cluster Redis)
@@ -141,14 +146,14 @@ generator
     width?: number;          // largura da viewport em px; padrão: 1200
     height?: number;         // altura em px; 0 = auto-expand até 4000px; padrão: 800
     scale?: number;          // device-pixel ratio; padrão: 2.0
-    fonts?: Uint8Array[];    // bytes TTF/OTF adicionais (complementa Inter embutida)
+    fonts?: Uint8Array[];    // bytes TTF/OTF adicionais (complementa Roboto embutida)
     withTailwind?: boolean;  // pré-processar Tailwind CSS v4 server-side; padrão: false
   };
   imageOptions?: {
     width?: number;          // largura da viewport em px; padrão: 1200
     height?: number;         // altura em px; 0 = auto-expand até 4000px; padrão: 0
     scale?: number;          // device-pixel ratio; padrão: 2.0
-    fonts?: Uint8Array[];    // bytes TTF/OTF adicionais (complementa Inter embutida)
+    fonts?: Uint8Array[];    // bytes TTF/OTF adicionais (complementa Roboto embutida)
     withTailwind?: boolean;  // pré-processar Tailwind CSS v4 server-side; padrão: false
   };
   metaData?: Record<string, unknown>;      // dados arbitrários repassados ao API Core
