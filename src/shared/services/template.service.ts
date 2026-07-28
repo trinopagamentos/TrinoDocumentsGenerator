@@ -12,6 +12,7 @@ const TEMPLATE_FILES: Record<string, string> = {
 	"anticipation-receipt": "anticipation-receipt.hbs",
 	"transfer-receipt": "transfer-receipt.hbs",
 	"comprovante": "comprovante.hbs",
+	"employee-payments-export": "employee-payments-export.hbs",
 };
 
 @Injectable()

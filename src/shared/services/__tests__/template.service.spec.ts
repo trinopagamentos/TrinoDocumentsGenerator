@@ -63,7 +63,7 @@ Deno.test("TemplateService.render: compila e renderiza reversal-receipt", async 
 
 // --- onModuleInit: pré-compilação de todos os templates ---
 
-Deno.test("TemplateService.onModuleInit: pré-compila todos os 6 templates", async () => {
+Deno.test("TemplateService.onModuleInit: pré-compila todos os templates", async () => {
 	const service = new TemplateService();
 	await service.onModuleInit();
 
@@ -73,6 +73,76 @@ Deno.test("TemplateService.onModuleInit: pré-compila todos os 6 templates", asy
 		assertEquals(typeof html, "string");
 		assertEquals(html.length > 0, true, `Template ${name} produziu HTML vazio`);
 	}
+});
+
+Deno.test("TemplateService.render: compila e renderiza employee-payments-export", async () => {
+	const service = new TemplateService();
+	await service.onModuleInit();
+	const html = await service.render(TemplateName.EMPLOYEE_PAYMENTS_EXPORT, {
+		title: "Relatório de pagamentos",
+		generatedAt: "28 de julho de 2026",
+		companyName: "Loja Teste LTDA",
+		companyDocument: "00.000.000/0001-00",
+		startDate: "01/01/2026",
+		endDate: "31/01/2026",
+		totalRows: 2,
+		totals: {
+			amount: "R$ 150,00",
+			feeAmount: "R$ 5,00",
+			finalAmount: "R$ 145,00",
+		},
+		items: [
+			{
+				id: "01HXYZ001",
+				createdDate: "15/01/2026 12:00",
+				status: "Concluído",
+				payerPreferredName: "João Silva",
+				paymentType: "QRCode",
+				amount: "R$ 100,00",
+				feeAmount: "R$ 2,50",
+				finalAmount: "R$ 97,50",
+			},
+			{
+				id: "01HXYZ002",
+				createdDate: "20/01/2026 09:30",
+				status: "Pendente",
+				payerPreferredName: "Maria Costa",
+				paymentType: "Transferência",
+				amount: "R$ 50,00",
+				feeAmount: "R$ 2,50",
+				finalAmount: "R$ 47,50",
+			},
+		],
+	});
+
+	assertEquals(typeof html, "string");
+	assertStringIncludes(html, "Relatório de pagamentos");
+	assertStringIncludes(html, "Loja Teste LTDA");
+	assertStringIncludes(html, "João Silva");
+	assertStringIncludes(html, "Valor líquido");
+	assertStringIncludes(html, "R$ 145,00");
+});
+
+Deno.test("TemplateService.render: employee-payments-export com lista vazia", async () => {
+	const service = new TemplateService();
+	await service.onModuleInit();
+	const html = await service.render(TemplateName.EMPLOYEE_PAYMENTS_EXPORT, {
+		title: "Relatório de pagamentos",
+		generatedAt: "28 de julho de 2026",
+		companyName: "Loja Vazia",
+		companyDocument: "11.111.111/0001-11",
+		startDate: "01/02/2026",
+		endDate: "28/02/2026",
+		totalRows: 0,
+		totals: {
+			amount: "R$ 0,00",
+			feeAmount: "R$ 0,00",
+			finalAmount: "R$ 0,00",
+		},
+		items: [],
+	});
+
+	assertStringIncludes(html, "Nenhum pagamento encontrado no período.");
 });
 
 Deno.test("TemplateService.render: usa template pré-compilado após onModuleInit", async () => {
