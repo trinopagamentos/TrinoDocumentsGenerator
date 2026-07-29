@@ -64,6 +64,7 @@ export enum TemplateName {
 	ANTICIPATION_RECEIPT = "anticipation-receipt",
 	TRANSFER_RECEIPT = "transfer-receipt",
 	COMPROVANTE = "comprovante",
+	EMPLOYEE_PAYMENTS_EXPORT = "employee-payments-export",
 }
 
 // ---------------------------------------------------------------------------
@@ -182,6 +183,31 @@ export interface AnticipationContractData {
 	qrcode_pj: string;
 }
 
+export interface EmployeePaymentsExportData {
+	title: string;
+	generatedAt: string;
+	companyName: string;
+	companyDocument: string;
+	startDate: string;
+	endDate: string;
+	totalRows: number;
+	totals: {
+		amount: string;
+		feeAmount: string;
+		finalAmount: string;
+	};
+	items: Array<{
+		id: string;
+		createdDate: string;
+		status: string;
+		payerPreferredName: string;
+		paymentType: string;
+		amount: string;
+		feeAmount: string;
+		finalAmount: string;
+	}>;
+}
+
 // ---------------------------------------------------------------------------
 // Union discriminada de templates
 // ---------------------------------------------------------------------------
@@ -192,7 +218,8 @@ export type TemplatePayload =
 	| { templateName: TemplateName.WITHDRAW_RECEIPT; templateData: WithdrawReceiptData }
 	| { templateName: TemplateName.ANTICIPATION_RECEIPT; templateData: AnticipationReceiptData }
 	| { templateName: TemplateName.TRANSFER_RECEIPT; templateData: TransferReceiptData }
-	| { templateName: TemplateName.COMPROVANTE; templateData: AnticipationContractData };
+	| { templateName: TemplateName.COMPROVANTE; templateData: AnticipationContractData }
+	| { templateName: TemplateName.EMPLOYEE_PAYMENTS_EXPORT; templateData: EmployeePaymentsExportData };
 
 // ---------------------------------------------------------------------------
 // Job payload
