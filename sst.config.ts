@@ -219,6 +219,7 @@ export default $config({
 		});
 
 		return {
+			cluster: cluster.id,
 			worker: (worker as $util.ComponentResource).urn,
 			isProd,
 			image: image ?? "image not defined",
