@@ -18,9 +18,9 @@ O worker **não expõe nenhuma porta HTTP**.\
 
 | Tecnologia                                                                      | Versão | Função                               |
 | ------------------------------------------------------------------------------- | ------ | ------------------------------------ |
-| [Deno](https://deno.com)                                                        | 2.8    | Runtime TypeScript                   |
+| [Deno](https://deno.com)                                                        | 2.9    | Runtime TypeScript                   |
 | [NestJS](https://nestjs.com)                                                    | 11     | Framework / DI / ciclo de vida       |
-| [BullMQ](https://docs.bullmq.io)                                                | 5      | Consumo de filas Redis               |
+| [BullMQ](https://docs.bullmq.io)                                                | 6      | Consumo de filas Redis               |
 | [@tadashi/skreen](https://jsr.io/@tadashi/skreen)                               | 4      | Renderer WASM (PDF + PNG)            |
 | [Tailwind CSS](https://tailwindcss.com)                                         | 4      | Pré-processamento de CSS server-side |
 | [daisyUI](https://daisyui.com)                                                  | 5      | Componentes CSS para os templates    |
@@ -37,9 +37,9 @@ src/
 |
 ├── generator/
 │   ├── dto/
-│   |   └── generate-document.job.ts    # Interfaces de entrada e saída dos jobs
-│   ├── generator.module.ts             # Registro da fila com políticas de retry
-│   └── generator.processor.ts          # Consumer BullMQ (pipeline: render → upload → result)
+│   |   └── generate-document.job.ts    # Interfaces de entrada e saída dos jobs (templates + opções)
+│   ├── generator.module.ts             # Registro da fila
+│   └── generator.processor.ts          # Consumer BullMQ (pipeline: template → render → upload → result)
 |
 ├── shared/
 │   ├── services/
@@ -48,11 +48,14 @@ src/
 │   |    ├── tailwind-inline.service.ts # Pré-processamento de Tailwind CSS v4 + daisyUI server-side
 │   |    └── s3.service.ts              # Upload de arquivos no AWS S3
 │   ├── utils/
-│   |    └── bullmq-connection.util.ts  # Fábrica de conexão BullMQ (standalone e cluster Redis)
+│   |    └── bullmq-connection.util.ts  # Fábrica de conexão BullMQ (standalone/cluster Redis + retry policy)
 │   └── shared.module.ts                # Módulo compartilhado
 |
 ├── app.module.ts                       # Módulo raiz (ConfigModule + BullModule)
 └── main.ts                             # Bootstrap do worker (graceful shutdown)
+
+template/                               # Templates Handlebars (.hbs) por tipo de documento
+fonts/                                  # Fontes embutidas nos PDFs/imagens (Roboto)
 ```
 
 ## Variáveis de ambiente
@@ -64,6 +67,7 @@ src/
 | `AWS_REGION`      | Sim         | —                        | Região AWS do bucket S3                                                                            |
 | `GENERATOR_QUEUE` | Não         | `generator`              | Nome da fila BullMQ                                                                                |
 | `NODE_ENV`        | Não         | `production`             | Ambiente de execução                                                                               |
+| `DEBUG_SAVE_HTML` | Não         | `false`                  | Quando `true`, salva o HTML final gerado em `/debug/<jobId>.html` (requer volume mount em Docker)  |
 
 ## Desenvolvimento local
 
@@ -87,7 +91,8 @@ Na próxima execução, reutiliza o contêiner existente.
 
 ### 2. Configure as variáveis de ambiente
 
-Renomeie o arquivo `.env.example` para `.env`:
+O `.env.example` do repositório traz variáveis usadas pelo build/deploy da imagem Docker (`IMG_REPO_*`, `IMG_VERSION_*`)
+e pela stack SST local. Para rodar o worker localmente, crie um `.env` com pelo menos:
 
 ```sh
 # Redis local (standalone)
@@ -136,29 +141,45 @@ generator
 
 ### Payload de entrada (`GenerateDocumentJobData`)
 
+O worker não recebe HTML pronto: ele recebe um `templateName` + `templateData` tipado, renderiza o template Handlebars
+correspondente (em [template/](template/)), processa o Tailwind CSS inline e então gera o PDF/imagem.
+
 ```typescript
 {
-  userId: string;           // ID do usuário solicitante
+  userId: string;                     // ID do usuário solicitante
   documentType: "pdf" | "image";
-  htmlContent: string;      // HTML completo já renderizado
-  s3Key: string;            // Ex: "receipts/2024/uuid.pdf"
+  s3Key: string;                      // Ex: "receipt/payment/uuid.png"
+  templateName: TemplateName;         // "payment-receipt" | "reversal-receipt" | "withdraw-receipt" |
+                                       // "anticipation-receipt" | "transfer-receipt" | "comprovante" |
+                                       // "employee-payments-export"
+  templateData: /* interface específica do templateName, ex.: PaymentReceiptData */;
   pdfOptions?: {
-    width?: number;          // largura da viewport em px; padrão: 1200
-    height?: number;         // altura em px; 0 = auto-expand até 4000px; padrão: 800
-    scale?: number;          // device-pixel ratio; padrão: 2.0
-    fonts?: Uint8Array[];    // bytes TTF/OTF adicionais (complementa Roboto embutida)
-    withTailwind?: boolean;  // pré-processar Tailwind CSS v4 server-side; padrão: false
+    pageSize?: "A4" | "A3" | "Letter";   // padrão: "A4"
+    marginMm?: number | string;          // shorthand CSS: "20", "20 30", "10 20 30 40"; padrão: 20
+    title?: string;                      // título nos metadados do PDF
+    author?: string;                     // autor nos metadados do PDF
+    landscape?: boolean;                 // orientação paisagem
+    language?: string;                   // tag BCP 47, ex: "pt-BR"
+    fonts?: string[];                    // caminhos absolutos de fontes adicionais
+    css?: string[];                      // caminhos absolutos de CSS adicionais
+    bookmarks?: boolean;                 // gerar outline a partir dos headings
+    tagged?: boolean;                    // árvore de estrutura para acessibilidade
+    pdfUa?: boolean;                     // conformidade PDF/UA-1 (implica tagged + bookmarks)
   };
   imageOptions?: {
     width?: number;          // largura da viewport em px; padrão: 1200
-    height?: number;         // altura em px; 0 = auto-expand até 4000px; padrão: 0
+    height?: number;         // altura em px; 0 = auto-expand; padrão: 0
     scale?: number;          // device-pixel ratio; padrão: 2.0
-    fonts?: Uint8Array[];    // bytes TTF/OTF adicionais (complementa Roboto embutida)
-    withTailwind?: boolean;  // pré-processar Tailwind CSS v4 server-side; padrão: false
+    fonts?: Array<string | Uint8Array>;  // caminhos ou bytes TTF/OTF adicionais (complementa Roboto embutida)
   };
-  metaData?: Record<string, unknown>;      // dados arbitrários repassados ao API Core
+  metaData?: Record<string, unknown>;    // dados arbitrários repassados ao API Core
 }
 ```
+
+> [!NOTE]\
+> Ver [generate-document.job.ts](src/generator/dto/generate-document.job.ts) para as interfaces completas de
+> `templateData` por template (`PaymentReceiptData`, `ReversalReceiptData`, `WithdrawReceiptData`,
+> `AnticipationReceiptData`, `TransferReceiptData`, `AnticipationContractData`, `EmployeePaymentsExportData`).
 
 ### Resultado (`GenerateDocumentJobResult`)
 
@@ -175,7 +196,7 @@ generator
 
 | Configuração            | Valor                 |
 | ----------------------- | --------------------- |
-| Tentativas máximas      | 2                     |
+| Tentativas máximas      | 3                     |
 | Estratégia de backoff   | Exponencial           |
 | Delay inicial           | 5 segundos (5s → 10s) |
 | Jobs concluídos retidos | 1 000 (máx 24 horas)  |
