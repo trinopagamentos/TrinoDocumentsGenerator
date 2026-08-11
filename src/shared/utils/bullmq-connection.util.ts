@@ -1,5 +1,5 @@
 import type { ConnectionOptions } from "bullmq";
-import { Cluster } from "ioredis";
+import { Cluster, type ClusterOptions } from "ioredis";
 import process from "node:process";
 
 export const BULLMQ_CONFIG_KEY = "bullmq";
@@ -15,39 +15,37 @@ export function parseRedisUrl() {
 	};
 }
 
+function buildClusterOptions(password?: string): ClusterOptions {
+	return {
+		dnsLookup: (address, callback) => callback(null, address),
+		enableReadyCheck: true,
+		clusterRetryStrategy: (times) => {
+			return Math.min(100 + times * 2, 2000);
+		},
+		redisOptions: {
+			connectTimeout: 20000,
+			commandTimeout: 30000,
+			maxRetriesPerRequest: null,
+			protocol: 2,
+			family: 4,
+			keepAlive: 1,
+			tls: {
+				checkServerIdentity: () => undefined,
+				rejectUnauthorized: false,
+			},
+			...(password && { password }),
+		},
+		enableOfflineQueue: true,
+		slotsRefreshTimeout: 15000,
+		slotsRefreshInterval: 5000,
+		scaleReads: "slave",
+	};
+}
+
 export function createBullMqConnection(): ConnectionOptions {
 	const { host, port, password, isCluster } = parseRedisUrl();
 	if (isCluster) {
-		// Type assertion needed: ioredis@5.11.0 Cluster is structurally incompatible
-		// with BullMQ's ConnectionOptions which pins ioredis@5.10.1 internally.
-		// The runtime behaviour is identical; only the protected `connecting` property
-		// was added to AbstractConnector in 5.11.0, causing a false TS error.
-		return new Cluster([{ host, port }], {
-			dnsLookup: (address, callback) => callback(null, address),
-			enableReadyCheck: false,
-			retryDelayOnFailover: 500,
-			clusterRetryStrategy: (times) => {
-				if (times > 10) return null;
-				return Math.min(200 + times * 100, 3000);
-			},
-			redisOptions: {
-				connectTimeout: 20000,
-				commandTimeout: 30000,
-				maxRetriesPerRequest: null,
-				family: 4,
-				keepAlive: 1,
-				lazyConnect: false,
-				tls: {
-					checkServerIdentity: () => undefined,
-					rejectUnauthorized: false,
-				},
-				...(password && { password }),
-			},
-			enableOfflineQueue: true,
-			slotsRefreshTimeout: 15000,
-			retryDelayOnClusterDown: 1000,
-			scaleReads: "master",
-		}) as unknown as ConnectionOptions;
+		return new Cluster([{ host, port }], buildClusterOptions(password));
 	}
 	return { host, port, ...(password && { password }) };
 }
