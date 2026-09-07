@@ -68,6 +68,21 @@ function makeProcessor(overrides?: {
 	);
 }
 
+const VALID_PAYMENT_RECEIPT_DATA = {
+	title: "Comprovante de pagamento",
+	currentDate: "01/01/2025",
+	amount: "R$ 100,00",
+	transaction_type: "PIX",
+	recipient_business_name: "Loja Teste",
+	recipient_doc: "00.000.000/0001-00",
+	recipient_doc_type: "CNPJ",
+	source_name: "João Silva",
+	source_doc: "000.000.000-00",
+	source_doc_type: "CPF",
+	transaction_id: "TXN-001",
+	sac: "+55 11 0000-0000",
+};
+
 function makeJob(data: { documentType: "pdf" | "image" } & Partial<GenerateDocumentJobData>) {
 	return {
 		id: "test-job-id-123",
@@ -75,7 +90,7 @@ function makeJob(data: { documentType: "pdf" | "image" } & Partial<GenerateDocum
 		data: {
 			userId: "user-abc",
 			templateName: TemplateName.PAYMENT_RECEIPT,
-			templateData: { title: "Teste" },
+			templateData: VALID_PAYMENT_RECEIPT_DATA,
 			s3Key: "docs/user-abc/file.pdf",
 			pdfOptions: undefined,
 			imageOptions: undefined,
@@ -132,7 +147,7 @@ Deno.test("GeneratorProcessor.process: chama templateService.render com template
 		},
 	};
 
-	const payload = { title: "Recibo de teste" };
+	const payload = { ...VALID_PAYMENT_RECEIPT_DATA, title: "Recibo de teste" };
 	await makeProcessor({ template: mockTemplate }).process(
 		makeJob({
 			documentType: "pdf",
@@ -274,6 +289,38 @@ Deno.test("GeneratorProcessor.process: logger.error é chamado quando o job falh
 	);
 
 	assertSpyCalls(loggerErrorStub, 1);
+});
+
+// --- Validação Zod ---
+
+Deno.test("GeneratorProcessor.process: rejeita job com documentType inválido antes de chamar qualquer serviço", async () => {
+	let skreenCalled = false;
+	const mockSkreen = {
+		generatePdf: (): Promise<Uint8Array> => {
+			skreenCalled = true;
+			return Promise.resolve(FAKE_PDF_BYTES);
+		},
+		generateImage: (): Promise<Uint8Array> => {
+			skreenCalled = true;
+			return Promise.resolve(FAKE_IMAGE_BYTES);
+		},
+	};
+
+	const job = makeJob({ documentType: "fax" as never });
+
+	await assertRejects(() => makeProcessor({ skreen: mockSkreen }).process(job as never));
+
+	assertEquals(skreenCalled, false);
+});
+
+Deno.test("GeneratorProcessor.process: rejeita job com templateData incompleto para o templateName informado", async () => {
+	const job = makeJob({
+		documentType: "pdf",
+		templateName: TemplateName.PAYMENT_RECEIPT,
+		templateData: { title: "Faltando campos" } as never,
+	});
+
+	await assertRejects(() => makeProcessor().process(job as never));
 });
 
 Deno.test("GeneratorProcessor.process: erro não-Error (string) é re-thrown e stack é undefined no log", async () => {

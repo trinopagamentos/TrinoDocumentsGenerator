@@ -1,11 +1,13 @@
 /**
  * @file generate-document.job.ts
- * @description DTOs para os jobs de geração de documentos.
+ * @description DTOs (schemas Zod) para os jobs de geração de documentos.
  *
- * Define as interfaces de entrada e saída dos jobs processados pela fila
+ * Define os schemas de entrada e saída dos jobs processados pela fila
  * BullMQ `generator`. Estes contratos são compartilhados entre o
  * API Core (produtor) e o TrinoDocWorker (consumidor).
  */
+
+import { z } from "zod";
 
 // ---------------------------------------------------------------------------
 // Opções de renderização
@@ -14,44 +16,46 @@
 /**
  * Opções de renderização para geração de documentos PDF via Skreen.
  */
-export interface PdfOptions {
+export const PdfOptionsSchema = z.object({
 	/** @defaultValue "A4" */
-	pageSize?: "A4" | "A3" | "Letter";
+	pageSize: z.enum(["A4", "A3", "Letter"]).optional(),
 	/** Margem em mm. Aceita shorthand CSS: `"20"`, `"20 30"`, `"10 20 30"`, `"10 20 30 40"`. @defaultValue 20 */
-	marginMm?: number | string;
+	marginMm: z.union([z.number(), z.string()]).optional(),
 	/** Título do documento nos metadados do PDF. */
-	title?: string;
+	title: z.string().optional(),
 	/** Autor do documento nos metadados do PDF. */
-	author?: string;
+	author: z.string().optional(),
 	/** Orientação paisagem. */
-	landscape?: boolean;
+	landscape: z.boolean().optional(),
 	/** Tag de idioma BCP 47, ex: `"pt-BR"`. */
-	language?: string;
+	language: z.string().optional(),
 	/** Caminhos absolutos para arquivos de fonte a embutir. */
-	fonts?: string[];
+	fonts: z.array(z.string()).optional(),
 	/** Caminhos absolutos para arquivos CSS a incluir. */
-	css?: string[];
+	css: z.array(z.string()).optional(),
 	/** Gerar outline a partir dos headings. */
-	bookmarks?: boolean;
+	bookmarks: z.boolean().optional(),
 	/** Habilitar árvore de estrutura para acessibilidade. */
-	tagged?: boolean;
+	tagged: z.boolean().optional(),
 	/** Conformidade PDF/UA-1 (implica `tagged` e `bookmarks`). */
-	pdfUa?: boolean;
-}
+	pdfUa: z.boolean().optional(),
+});
+export type PdfOptions = z.infer<typeof PdfOptionsSchema>;
 
 /**
  * Opções de renderização para geração de imagens PNG via Skreen.
  */
-export interface ImageOptions {
+export const ImageOptionsSchema = z.object({
 	/** Largura da viewport em pixels lógicos. @defaultValue 1200 */
-	width?: number;
+	width: z.number().optional(),
 	/** Altura da viewport. Use `0` para auto-expand. @defaultValue 0 */
-	height?: number;
+	height: z.number().optional(),
 	/** Device-pixel ratio. @defaultValue 2.0 */
-	scale?: number;
+	scale: z.number().optional(),
 	/** Fontes adicionais a embutir. Aceita caminhos de arquivo (string) ou bytes raw TTF/OTF (Uint8Array). */
-	fonts?: Array<string | Uint8Array>;
-}
+	fonts: z.array(z.union([z.string(), z.instanceof(Uint8Array)])).optional(),
+});
+export type ImageOptions = z.infer<typeof ImageOptionsSchema>;
 
 // ---------------------------------------------------------------------------
 // Enum de templates disponíveis
@@ -68,185 +72,218 @@ export enum TemplateName {
 }
 
 // ---------------------------------------------------------------------------
-// Interfaces de dados por template
+// Schemas de dados por template
 // ---------------------------------------------------------------------------
 
-export interface PaymentReceiptData {
-	title: string;
-	currentDate: string;
-	amount: string;
-	transaction_type: string;
-	recipient_business_name: string;
-	recipient_doc: string;
-	recipient_doc_type: string;
-	source_name: string;
-	source_doc: string;
-	source_doc_type: string;
-	transaction_id: string;
-	sac: string;
-}
+export const PaymentReceiptDataSchema = z.object({
+	title: z.string(),
+	currentDate: z.string(),
+	amount: z.string(),
+	transaction_type: z.string(),
+	recipient_business_name: z.string(),
+	recipient_doc: z.string(),
+	recipient_doc_type: z.string(),
+	source_name: z.string(),
+	source_doc: z.string(),
+	source_doc_type: z.string(),
+	transaction_id: z.string(),
+	sac: z.string(),
+});
+export type PaymentReceiptData = z.infer<typeof PaymentReceiptDataSchema>;
 
-export interface ReversalReceiptData {
-	title: string;
-	currentDate: string;
-	amount: string;
-	transaction_type: string;
-	applicant_name: string;
-	applicant_doc: string;
-	applicant_doc_type: string;
-	recipient_name: string;
-	recipient_doc: string;
-	recipient_doc_type: string;
-	transaction_id: string;
-	sac: string;
-}
+export const ReversalReceiptDataSchema = z.object({
+	title: z.string(),
+	currentDate: z.string(),
+	amount: z.string(),
+	transaction_type: z.string(),
+	applicant_name: z.string(),
+	applicant_doc: z.string(),
+	applicant_doc_type: z.string(),
+	recipient_name: z.string(),
+	recipient_doc: z.string(),
+	recipient_doc_type: z.string(),
+	transaction_id: z.string(),
+	sac: z.string(),
+});
+export type ReversalReceiptData = z.infer<typeof ReversalReceiptDataSchema>;
 
-export interface WithdrawReceiptData {
-	title: string;
-	currentDate: string;
-	amount: string;
-	applicant_business_name: string;
-	applicant_doc: string;
-	applicant_doc_type: string;
-	applicant_pix_key: string;
-	transaction_type: string;
-	recipient_business_name: string;
-	recipient_doc: string;
-	recipient_doc_type: string;
-	fee_amount: string;
-	fee_iof: string;
-	fee_cet: string;
-	transaction_id: string;
-	sac: string;
-}
+export const WithdrawReceiptDataSchema = z.object({
+	title: z.string(),
+	currentDate: z.string(),
+	amount: z.string(),
+	applicant_business_name: z.string(),
+	applicant_doc: z.string(),
+	applicant_doc_type: z.string(),
+	applicant_pix_key: z.string(),
+	transaction_type: z.string(),
+	recipient_business_name: z.string(),
+	recipient_doc: z.string(),
+	recipient_doc_type: z.string(),
+	fee_amount: z.string(),
+	fee_iof: z.string(),
+	fee_cet: z.string(),
+	transaction_id: z.string(),
+	sac: z.string(),
+});
+export type WithdrawReceiptData = z.infer<typeof WithdrawReceiptDataSchema>;
 
-export interface AnticipationReceiptData {
-	title: string;
-	currentDate: string;
-	amount: string;
-	applicant_name: string;
-	applicant_doc: string;
-	applicant_doc_type: string;
-	transaction_type: string;
-	transaction_id: string;
-	sac: string;
-}
+export const AnticipationReceiptDataSchema = z.object({
+	title: z.string(),
+	currentDate: z.string(),
+	amount: z.string(),
+	applicant_name: z.string(),
+	applicant_doc: z.string(),
+	applicant_doc_type: z.string(),
+	transaction_type: z.string(),
+	transaction_id: z.string(),
+	sac: z.string(),
+});
+export type AnticipationReceiptData = z.infer<typeof AnticipationReceiptDataSchema>;
 
-export interface TransferReceiptData {
-	title: string;
-	currentDate: string;
-	amount: string;
-	transaction_type: string;
-	recipient_business_name: string;
-	recipient_doc: string;
-	recipient_doc_type: string;
-	source_name: string;
-	source_doc: string;
-	source_doc_type: string;
-	transaction_id: string;
-	sac: string;
-}
+export const TransferReceiptDataSchema = z.object({
+	title: z.string(),
+	currentDate: z.string(),
+	amount: z.string(),
+	transaction_type: z.string(),
+	recipient_business_name: z.string(),
+	recipient_doc: z.string(),
+	recipient_doc_type: z.string(),
+	source_name: z.string(),
+	source_doc: z.string(),
+	source_doc_type: z.string(),
+	transaction_id: z.string(),
+	sac: z.string(),
+});
+export type TransferReceiptData = z.infer<typeof TransferReceiptDataSchema>;
 
-export interface AnticipationContractData {
-	issueDate: string;
-	company: {
-		fullName: string;
-		document: string;
-		address: string;
-		phone: string;
-		email: string;
-		responsible: {
-			fullName: string;
-			document: string;
-		};
-	};
-	employee: {
-		fullName: string;
-		document: string;
-		cargo: string;
-		matricula: string;
-		dataAdmissao: string;
-	};
-	anticipation: {
-		amount: string;
-		dataSolicitacao: string;
-		dataLiberacao: string;
-		contaDeposito: string;
-	};
-	signatures: {
-		employee: { name: string };
-		responsible: { name: string };
-	};
+export const AnticipationContractDataSchema = z.object({
+	issueDate: z.string(),
+	company: z.object({
+		fullName: z.string(),
+		document: z.string(),
+		address: z.string(),
+		phone: z.string(),
+		email: z.string(),
+		responsible: z.object({
+			fullName: z.string(),
+			document: z.string(),
+		}),
+	}),
+	employee: z.object({
+		fullName: z.string(),
+		document: z.string(),
+		cargo: z.string(),
+		matricula: z.string(),
+		dataAdmissao: z.string(),
+	}),
+	anticipation: z.object({
+		amount: z.string(),
+		dataSolicitacao: z.string(),
+		dataLiberacao: z.string(),
+		contaDeposito: z.string(),
+	}),
+	signatures: z.object({
+		employee: z.object({ name: z.string() }),
+		responsible: z.object({ name: z.string() }),
+	}),
 	/** SVG do QR code do colaborador (PF), com class="size-[250px]" aplicada */
-	qrcode_pf: string;
+	qrcode_pf: z.string(),
 	/** SVG do QR code do responsável (PJ), com class="size-[250px]" aplicada */
-	qrcode_pj: string;
-}
+	qrcode_pj: z.string(),
+});
+export type AnticipationContractData = z.infer<typeof AnticipationContractDataSchema>;
 
-export interface EmployeePaymentsExportData {
-	title: string;
-	generatedAt: string;
-	companyName: string;
-	companyDocument: string;
-	startDate: string;
-	endDate: string;
-	totalRows: number;
-	totals: {
-		amount: string;
-		feeAmount: string;
-		finalAmount: string;
-	};
-	items: Array<{
-		id: string;
-		createdDate: string;
-		status: string;
-		payerPreferredName: string;
-		paymentType: string;
-		amount: string;
-		feeAmount: string;
-		finalAmount: string;
-	}>;
-}
-
-// ---------------------------------------------------------------------------
-// Union discriminada de templates
-// ---------------------------------------------------------------------------
-
-export type TemplatePayload =
-	| { templateName: TemplateName.PAYMENT_RECEIPT; templateData: PaymentReceiptData }
-	| { templateName: TemplateName.REVERSAL_RECEIPT; templateData: ReversalReceiptData }
-	| { templateName: TemplateName.WITHDRAW_RECEIPT; templateData: WithdrawReceiptData }
-	| { templateName: TemplateName.ANTICIPATION_RECEIPT; templateData: AnticipationReceiptData }
-	| { templateName: TemplateName.TRANSFER_RECEIPT; templateData: TransferReceiptData }
-	| { templateName: TemplateName.COMPROVANTE; templateData: AnticipationContractData }
-	| { templateName: TemplateName.EMPLOYEE_PAYMENTS_EXPORT; templateData: EmployeePaymentsExportData };
+export const EmployeePaymentsExportDataSchema = z.object({
+	title: z.string(),
+	generatedAt: z.string(),
+	companyName: z.string(),
+	companyDocument: z.string(),
+	startDate: z.string(),
+	endDate: z.string(),
+	totalRows: z.number(),
+	totals: z.object({
+		amount: z.string(),
+		feeAmount: z.string(),
+		finalAmount: z.string(),
+	}),
+	items: z.array(
+		z.object({
+			id: z.string(),
+			createdDate: z.string(),
+			status: z.string(),
+			payerPreferredName: z.string(),
+			paymentType: z.string(),
+			amount: z.string(),
+			feeAmount: z.string(),
+			finalAmount: z.string(),
+		}),
+	),
+});
+export type EmployeePaymentsExportData = z.infer<typeof EmployeePaymentsExportDataSchema>;
 
 // ---------------------------------------------------------------------------
 // Job payload
 // ---------------------------------------------------------------------------
 
-interface GenerateDocumentJobBase {
+const generateDocumentJobBaseShape = {
 	/** ID do usuário solicitante (repassado no result para o API Core) */
-	userId: string;
+	userId: z.string(),
 	/** Tipo de saída: PDF ou imagem PNG */
-	documentType: "pdf" | "image";
+	documentType: z.enum(["pdf", "image"]),
 	/** Chave S3 de destino. Ex: `"receipt/payment/uuid.png"` */
-	s3Key: string;
+	s3Key: z.string(),
 	/** Opções específicas para PDF */
-	pdfOptions?: PdfOptions;
+	pdfOptions: PdfOptionsSchema.optional(),
 	/** Opções específicas para imagem */
-	imageOptions?: ImageOptions;
+	imageOptions: ImageOptionsSchema.optional(),
 	/** Dados arbitrários repassados ao API Core no resultado */
-	metaData?: Record<string, unknown>;
-}
+	metaData: z.record(z.string(), z.unknown()).optional(),
+};
 
 /**
- * Payload do job publicado na fila `generator` pelo API Core.
+ * Schema do payload publicado na fila `generator` pelo API Core.
  *
  * O worker recebe `templateName + templateData`, renderiza o template Handlebars,
  * processa o CSS Tailwind inline e gera o documento final (PDF ou imagem).
  */
-export type GenerateDocumentJobData = GenerateDocumentJobBase & TemplatePayload;
+export const GenerateDocumentJobDataSchema = z.discriminatedUnion("templateName", [
+	z.object({
+		...generateDocumentJobBaseShape,
+		templateName: z.literal(TemplateName.PAYMENT_RECEIPT),
+		templateData: PaymentReceiptDataSchema,
+	}),
+	z.object({
+		...generateDocumentJobBaseShape,
+		templateName: z.literal(TemplateName.REVERSAL_RECEIPT),
+		templateData: ReversalReceiptDataSchema,
+	}),
+	z.object({
+		...generateDocumentJobBaseShape,
+		templateName: z.literal(TemplateName.WITHDRAW_RECEIPT),
+		templateData: WithdrawReceiptDataSchema,
+	}),
+	z.object({
+		...generateDocumentJobBaseShape,
+		templateName: z.literal(TemplateName.ANTICIPATION_RECEIPT),
+		templateData: AnticipationReceiptDataSchema,
+	}),
+	z.object({
+		...generateDocumentJobBaseShape,
+		templateName: z.literal(TemplateName.TRANSFER_RECEIPT),
+		templateData: TransferReceiptDataSchema,
+	}),
+	z.object({
+		...generateDocumentJobBaseShape,
+		templateName: z.literal(TemplateName.COMPROVANTE),
+		templateData: AnticipationContractDataSchema,
+	}),
+	z.object({
+		...generateDocumentJobBaseShape,
+		templateName: z.literal(TemplateName.EMPLOYEE_PAYMENTS_EXPORT),
+		templateData: EmployeePaymentsExportDataSchema,
+	}),
+]);
+export type GenerateDocumentJobData = z.infer<typeof GenerateDocumentJobDataSchema>;
 
 // ---------------------------------------------------------------------------
 // Resultado do job
@@ -255,13 +292,14 @@ export type GenerateDocumentJobData = GenerateDocumentJobBase & TemplatePayload;
 /**
  * Resultado retornado pelo processor após a conclusão bem-sucedida do job.
  */
-export interface GenerateDocumentJobResult {
+export const GenerateDocumentJobResultSchema = z.object({
 	/** URL pública do arquivo armazenado no S3 */
-	url: string;
+	url: z.string(),
 	/** ID do usuário solicitante */
-	userId: string;
+	userId: z.string(),
 	/** Timestamp ISO 8601 de conclusão */
-	completedAt: string;
+	completedAt: z.string(),
 	/** Dados arbitrários repassados do payload de entrada */
-	metaData?: Record<string, unknown>;
-}
+	metaData: z.record(z.string(), z.unknown()).optional(),
+});
+export type GenerateDocumentJobResult = z.infer<typeof GenerateDocumentJobResultSchema>;

@@ -16,6 +16,7 @@ import { SkreenService } from "@/shared/services/skreen.service.ts";
 import { S3Service } from "@/shared/services/s3.service.ts";
 import { TailwindInlineService } from "@/shared/services/tailwind-inline.service.ts";
 import { TemplateService } from "@/shared/services/template.service.ts";
+import { GenerateDocumentJobDataSchema } from "@/generator/dto/generate-document.job.ts";
 import type { GenerateDocumentJobData, GenerateDocumentJobResult } from "@/generator/dto/generate-document.job.ts";
 
 /**
@@ -45,18 +46,21 @@ export class GeneratorProcessor extends WorkerHost {
 	}
 
 	async process(job: Job<GenerateDocumentJobData>): Promise<GenerateDocumentJobResult> {
-		this.logger.log({
-			msg: "Job started",
-			jobId: job.id,
-			queue: job.queueName,
-			documentType: job.data.documentType,
-			s3Key: job.data.s3Key,
-			userId: job.data.userId,
-		});
-
 		try {
+			// Valida o payload recebido contra o schema Zod antes de processar
+			const data = GenerateDocumentJobDataSchema.parse(job.data);
+
+			this.logger.log({
+				msg: "Job started",
+				jobId: job.id,
+				queue: job.queueName,
+				documentType: data.documentType,
+				s3Key: data.s3Key,
+				userId: data.userId,
+			});
+
 			// Etapa 1: resolver o HTML final
-			const htmlContent = await this.resolveHtml(job);
+			const htmlContent = await this.resolveHtml(job.id, data);
 
 			if (this.config.get<boolean>("debugSaveHtml")) {
 				const debugPath = `/debug/${job.id}.html`;
@@ -65,22 +69,22 @@ export class GeneratorProcessor extends WorkerHost {
 			}
 
 			// Etapa 2: renderizar o HTML em bytes binários (PDF ou imagem)
-			const buffer = job.data.documentType === "pdf"
-				? await this.skreenService.generatePdf(htmlContent, job.data.pdfOptions)
-				: await this.skreenService.generateImage(htmlContent, job.data.imageOptions);
+			const buffer = data.documentType === "pdf"
+				? await this.skreenService.generatePdf(htmlContent, data.pdfOptions)
+				: await this.skreenService.generateImage(htmlContent, data.imageOptions);
 
 			this.logger.log({ msg: "Document generated", jobId: job.id, bytes: buffer.byteLength });
 
 			// Etapa 3: enviar os bytes para o S3 e obter a URL pública
-			const url = await this.s3Service.upload(job.data.s3Key, buffer, job.data.documentType);
+			const url = await this.s3Service.upload(data.s3Key, buffer, data.documentType);
 
-			this.logger.log({ msg: "Uploaded to S3", jobId: job.id, s3Key: job.data.s3Key, url });
+			this.logger.log({ msg: "Uploaded to S3", jobId: job.id, s3Key: data.s3Key, url });
 
 			const result: GenerateDocumentJobResult = {
 				url,
-				userId: job.data.userId,
+				userId: data.userId,
 				completedAt: new Date().toISOString(),
-				...(job.data.metaData !== undefined && { metaData: job.data.metaData }),
+				...(data.metaData !== undefined && { metaData: data.metaData }),
 			};
 
 			this.logger.log({ msg: "Job completed", jobId: job.id, url });
@@ -101,11 +105,11 @@ export class GeneratorProcessor extends WorkerHost {
 	/**
 	 * Resolve o HTML final: renderiza o template Handlebars e processa CSS inline.
 	 */
-	private async resolveHtml(job: Job<GenerateDocumentJobData>): Promise<string> {
-		this.logger.log({ msg: "Rendering template", jobId: job.id, templateName: job.data.templateName });
+	private async resolveHtml(jobId: string | undefined, data: GenerateDocumentJobData): Promise<string> {
+		this.logger.log({ msg: "Rendering template", jobId, templateName: data.templateName });
 		const rawHtml = await this.templateService.render(
-			job.data.templateName,
-			job.data.templateData,
+			data.templateName,
+			data.templateData,
 		);
 		return this.tailwindInlineService.processHtml(rawHtml);
 	}
