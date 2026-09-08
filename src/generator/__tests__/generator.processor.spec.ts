@@ -2,6 +2,7 @@ import "reflect-metadata";
 import { assertEquals, assertRejects } from "@std/assert";
 import { assertSpyCalls, stub } from "@std/testing/mock";
 import { Logger } from "@nestjs/common";
+import { UnrecoverableError } from "bullmq";
 import { GeneratorProcessor } from "@/generator/generator.processor.ts";
 import { TemplateName } from "@/generator/dto/generate-document.job.ts";
 import type { GenerateDocumentJobData } from "@/generator/dto/generate-document.job.ts";
@@ -308,7 +309,10 @@ Deno.test("GeneratorProcessor.process: rejeita job com documentType inválido an
 
 	const job = makeJob({ documentType: "fax" as never });
 
-	await assertRejects(() => makeProcessor({ skreen: mockSkreen }).process(job as never));
+	await assertRejects(
+		() => makeProcessor({ skreen: mockSkreen }).process(job as never),
+		UnrecoverableError,
+	);
 
 	assertEquals(skreenCalled, false);
 });
@@ -320,7 +324,16 @@ Deno.test("GeneratorProcessor.process: rejeita job com templateData incompleto p
 		templateData: { title: "Faltando campos" } as never,
 	});
 
-	await assertRejects(() => makeProcessor().process(job as never));
+	await assertRejects(() => makeProcessor().process(job as never), UnrecoverableError);
+});
+
+Deno.test("GeneratorProcessor.process: payload inválido lança UnrecoverableError (não deve reentrar no retry padrão da fila)", async () => {
+	using loggerErrorStub = stub(Logger.prototype, "error", () => {});
+
+	const job = makeJob({ documentType: "fax" as never });
+
+	await assertRejects(() => makeProcessor().process(job as never), UnrecoverableError);
+	assertSpyCalls(loggerErrorStub, 1);
 });
 
 Deno.test("GeneratorProcessor.process: erro não-Error (string) é re-thrown e stack é undefined no log", async () => {

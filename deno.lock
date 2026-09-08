@@ -23,6 +23,7 @@
     "npm:daisyui@5.7.28": "5.7.28",
     "npm:handlebars@4.7.9": "4.7.9",
     "npm:ioredis@6.0.0": "6.0.0",
+    "npm:is-svg@5.1.0": "5.1.0",
     "npm:lightningcss@1.33.0": "1.33.0",
     "npm:reflect-metadata@0.2.2": "0.2.2",
     "npm:rxjs@7.8.2": "7.8.2",
@@ -529,6 +530,13 @@
     "fast-safe-stringify@2.1.1": {
       "integrity": "sha512-W+KJc2dmILlPplD/H4K9l9LcAHAfPtP6BY84uVLXQ6Evcz9Lcg33Y2z1IVblT6xdY54PXYVHEv+0Wpq8Io6zkA=="
     },
+    "fast-xml-parser@4.5.7": {
+      "integrity": "sha512-a6Qh1RMCNbSrU1+sAyAAZH3rTe+OaWJbNZIq0S+ifZciUUOQtlVxBJwoTUE2bYhysmG/RYyI5WJFIKdBahJdrQ==",
+      "dependencies": [
+        "strnum"
+      ],
+      "bin": true
+    },
     "file-type@22.0.2": {
       "integrity": "sha512-0H8TsCUGBLx+V5adH3EY52hTAcyLKbV1D4gq5cIOJ6DnQAHeV9Z2Hhuc5CoBX4YmvB2oL+JIC84z0qO7JsCoNw==",
       "dependencies": [
@@ -566,6 +574,12 @@
         "denque",
         "redis-errors",
         "standard-as-callback"
+      ]
+    },
+    "is-svg@5.1.0": {
+      "integrity": "sha512-uVg5yifaTxHoefNf5Jcx+i9RZe2OBYd/UStp1umx+EERa4xGRa3LLGXjoEph43qUORC0qkafUgrXZ6zzK89yGA==",
+      "dependencies": [
+        "fast-xml-parser"
       ]
     },
     "iterare@1.2.1": {
@@ -828,6 +842,9 @@
         "safe-buffer"
       ]
     },
+    "strnum@1.1.2": {
+      "integrity": "sha512-vrN+B7DBIoTTZjnPNewwhx6cBA/H+IS7rfW68n7XxC1y7uoiGQBxaKzqucGUgavX15dJgiGztLJ8vxuEzwqBdA=="
+    },
     "strtok3@10.3.5": {
       "integrity": "sha512-ki4hZQfh5rX0QDLLkOCj+h+CVNkqmp/CMf8v8kZpkNVK6jGQooMytqzLZYUVYIZcFZ6yDB70EfD8POcFXiF5oA==",
       "dependencies": [
@@ -890,6 +907,7 @@
       "npm:daisyui@5.7.28",
       "npm:handlebars@4.7.9",
       "npm:ioredis@6.0.0",
+      "npm:is-svg@5.1.0",
       "npm:lightningcss@1.33.0",
       "npm:reflect-metadata@0.2.2",
       "npm:rxjs@7.8.2",

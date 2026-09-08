@@ -7,7 +7,33 @@
  * API Core (produtor) e o TrinoDocWorker (consumidor).
  */
 
+import isSvg from "is-svg";
 import { z } from "zod";
+
+// ---------------------------------------------------------------------------
+// Validações de segurança reutilizáveis
+// ---------------------------------------------------------------------------
+
+/** Diretório de assets (fontes/CSS) que o worker tem permissão de ler do disco. */
+const ALLOWED_ASSET_DIR = new URL("../../../fonts/", import.meta.url).pathname;
+
+/** Caminho de arquivo local restrito ao diretório de assets do worker. */
+const safeAssetPath = z.string().refine(
+	(p) => p.startsWith(ALLOWED_ASSET_DIR) && !p.includes(".."),
+	{ message: "caminho de asset fora do diretório permitido" },
+);
+
+/** Padrões de SVG que habilitam SSRF/local-file-read no renderizador headless. */
+const UNSAFE_SVG_PATTERN = /<script|foreignObject|(?:xlink:href|href)\s*=\s*["'](?!#)/i;
+
+/** SVG validado estruturalmente (`is-svg`) e sem vetores de SSRF/local-file-read. */
+const qrcodeSvgSchema = z
+	.string()
+	.max(20_000)
+	.refine((s) => isSvg(s), { message: "qrcode deve ser um <svg> válido" })
+	.refine((s) => !UNSAFE_SVG_PATTERN.test(s), {
+		message: "qrcode SVG não pode conter script, foreignObject ou referências externas",
+	});
 
 // ---------------------------------------------------------------------------
 // Opções de renderização
@@ -29,10 +55,10 @@ export const PdfOptionsSchema = z.object({
 	landscape: z.boolean().optional(),
 	/** Tag de idioma BCP 47, ex: `"pt-BR"`. */
 	language: z.string().optional(),
-	/** Caminhos absolutos para arquivos de fonte a embutir. */
-	fonts: z.array(z.string()).optional(),
-	/** Caminhos absolutos para arquivos CSS a incluir. */
-	css: z.array(z.string()).optional(),
+	/** Caminhos absolutos para arquivos de fonte a embutir. Restrito ao diretório de assets do worker. */
+	fonts: z.array(safeAssetPath).optional(),
+	/** Caminhos absolutos para arquivos CSS a incluir. Restrito ao diretório de assets do worker. */
+	css: z.array(safeAssetPath).optional(),
 	/** Gerar outline a partir dos headings. */
 	bookmarks: z.boolean().optional(),
 	/** Habilitar árvore de estrutura para acessibilidade. */
@@ -187,9 +213,9 @@ export const AnticipationContractDataSchema = z.object({
 		responsible: z.object({ name: z.string() }),
 	}),
 	/** SVG do QR code do colaborador (PF), com class="size-[250px]" aplicada */
-	qrcode_pf: z.string(),
+	qrcode_pf: qrcodeSvgSchema,
 	/** SVG do QR code do responsável (PJ), com class="size-[250px]" aplicada */
-	qrcode_pj: z.string(),
+	qrcode_pj: qrcodeSvgSchema,
 });
 export type AnticipationContractData = z.infer<typeof AnticipationContractDataSchema>;
 

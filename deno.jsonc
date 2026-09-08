@@ -41,6 +41,7 @@
         "daisyui": "npm:daisyui@5.7.28",
         "handlebars": "npm:handlebars@4.7.9",
         "ioredis": "npm:ioredis@6.0.0",
+        "is-svg": "npm:is-svg@5.1.0",
         "lightningcss": "npm:lightningcss@1.33.0",
         "reflect-metadata": "npm:reflect-metadata@0.2.2",
         "rxjs": "npm:rxjs@7.8.2",
