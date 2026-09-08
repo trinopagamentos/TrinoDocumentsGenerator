@@ -3,6 +3,7 @@ import { assertEquals, assertRejects } from "@std/assert";
 import { assertSpyCalls, stub } from "@std/testing/mock";
 import { Logger } from "@nestjs/common";
 import { UnrecoverableError } from "bullmq";
+import fs from "node:fs/promises";
 import { GeneratorProcessor } from "@/generator/generator.processor.ts";
 import { TemplateName } from "@/generator/dto/generate-document.job.ts";
 import type { GenerateDocumentJobData } from "@/generator/dto/generate-document.job.ts";
@@ -334,6 +335,33 @@ Deno.test("GeneratorProcessor.process: payload inválido lança UnrecoverableErr
 
 	await assertRejects(() => makeProcessor().process(job as never), UnrecoverableError);
 	assertSpyCalls(loggerErrorStub, 1);
+});
+
+// --- debugSaveHtml ---
+
+Deno.test("GeneratorProcessor.process: quando debugSaveHtml=true, salva o HTML em /debug/<jobId>.html", async () => {
+	let capturedPath: string | undefined;
+	let capturedContent: string | undefined;
+	using writeFileStub = stub(fs, "writeFile", (path: unknown, content: unknown, ..._rest: unknown[]) => {
+		capturedPath = path as string;
+		capturedContent = content as string;
+		return Promise.resolve();
+	});
+
+	const debugConfigService = { get: (key: string) => key === "debugSaveHtml" ? true : false } as never;
+	const processor = new GeneratorProcessor(
+		makeMockSkreenService() as never,
+		makeMockS3Service() as never,
+		makeMockTemplateService() as never,
+		makeMockTailwindService() as never,
+		debugConfigService,
+	);
+
+	await processor.process(makeJob({ documentType: "pdf" }) as never);
+
+	assertSpyCalls(writeFileStub, 1);
+	assertEquals(capturedPath, "/debug/test-job-id-123.html");
+	assertEquals(capturedContent, RENDERED_HTML);
 });
 
 Deno.test("GeneratorProcessor.process: erro não-Error (string) é re-thrown e stack é undefined no log", async () => {
