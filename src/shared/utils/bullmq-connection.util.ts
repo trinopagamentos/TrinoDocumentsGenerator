@@ -15,7 +15,7 @@ export function parseRedisUrl() {
 	};
 }
 
-function buildClusterOptions(password?: string): ClusterOptions {
+export function buildClusterOptions(password?: string): ClusterOptions {
 	return {
 		dnsLookup: (address, callback) => callback(null, address),
 		enableReadyCheck: true,
@@ -29,10 +29,7 @@ function buildClusterOptions(password?: string): ClusterOptions {
 			protocol: 2,
 			family: 4,
 			keepAlive: 1,
-			tls: {
-				checkServerIdentity: () => undefined,
-				rejectUnauthorized: false,
-			},
+			tls: {},
 			...(password && { password }),
 		},
 		enableOfflineQueue: true,
