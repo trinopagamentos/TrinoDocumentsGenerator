@@ -1,4 +1,4 @@
-# Pull Request Rules — TrinoCore
+# Pull Request Rules — TrinoDocWorker
 
 ## Título do PR
 

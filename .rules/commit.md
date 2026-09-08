@@ -1,17 +1,17 @@
-# Commit Rules — TrinoCore
+# Commit Rules — TrinoDocWorker
 
 ## Pre-Commit Checklist (obrigatório — sempre nesta ordem)
 
-1. **Lint check**: `npm run biome:chk`
-   - Se falhar, execute `npm run biome:fix` e re-cheque antes de prosseguir.
-   - Nunca commitar se o lint ainda falhar após auto-fix.
+1. **Lint e formatação**: `deno task lint` e `deno task fmt:chk`
+   - Se `fmt:chk` falhar, execute `deno task fmt` e re-cheque antes de prosseguir.
+   - Se `deno task lint` ainda falhar após o `fmt`, corrija manualmente. Nunca commitar com lint quebrado.
 
-2. **Testes**: `npm t -- --maxWorkers=4`
+2. **Testes**: `deno task test`
    - Se os testes falharem, pare e reporte as falhas. **Não commitar.**
-   - Cobertura mínima: **50%** em statements, branches, functions e lines.
-   - Se a cobertura estiver abaixo de 50% em qualquer métrica, avisar o usuário e não prosseguir sem confirmação explícita.
+   - Não há gate obrigatório de cobertura configurado neste projeto. Quando fizer sentido, rode
+     `deno task test:coverage` e inclua o resultado como evidência no PR — sem bloquear o commit por percentual.
 
-3. Somente após os dois checks passarem, prosseguir para o commit.
+3. Somente após lint, formatação e testes passarem, prosseguir para o commit.
 
 ---
 
@@ -24,7 +24,7 @@
 ```
 
 - **type**: `feat`, `fix`, `refactor`, `chore`, `docs`, `test`, `perf`, `ci`
-- **scope**: nome do módulo afetado (ex: `announcement`, `withdraw`, `transfer`)
+- **scope**: nome do módulo afetado (ex: `generator`, `shared`, `config`)
 - **short description**: imperativo, minúsculas, sem ponto final
 - **body**: explica **o quê** mudou e **por quê** — não apenas quais arquivos foram tocados
 - Use bullet points no body listando as mudanças-chave
@@ -33,12 +33,11 @@
 ### Exemplo de commit bem estruturado
 
 ```
-feat(announcement): add soft delete support
+feat(generator): add retry policy for transient S3 upload failures
 
-- Added `deletedDate` field to AnnouncementEntity
-- Updated AnnouncementPrismaRepository to filter out soft-deleted records
-- Added softDelete() method to IAnnouncementRepository interface
-- Added unit tests for soft delete scenarios (coverage: 87%)
+- Added exponential backoff to S3Service.upload()
+- Updated GeneratorProcessor to surface upload errors with job context
+- Added unit tests for retry scenarios (deno task test)
 ```
 
 ---
@@ -46,8 +45,8 @@ feat(announcement): add soft delete support
 ## Fluxo de Execução (ordem obrigatória)
 
 1. `git status` + `git diff --stat` — entender o escopo das mudanças
-2. `npm run biome:chk` — lint (auto-fix com `biome:fix` se necessário, re-checar)
-3. `npm t -- --maxWorkers=4` — testes + cobertura
+2. `deno task lint` e `deno task fmt:chk` — lint e formatação (auto-fix com `deno task fmt` se necessário, re-checar)
+3. `deno task test` — testes
 4. `git add <arquivos>` — staging explícito (nunca `git add .` sem revisar)
 5. `git commit` — commit com mensagem detalhada no formato Conventional Commits
 
@@ -66,7 +65,7 @@ feat(announcement): add soft delete support
 
 ## Tratamento de Erros
 
-- Se `biome:chk` falhar: reportar os erros específicos, rodar `biome:fix`, re-checar e reportar o resultado.
+- Se `deno task fmt:chk` falhar: reportar os arquivos afetados, rodar `deno task fmt` e re-checar.
+- Se `deno task lint` falhar: reportar os erros específicos e corrigir manualmente antes de prosseguir.
 - Se os testes falharem: listar cada teste falho com sua mensagem de erro. Perguntar ao usuário se quer corrigir primeiro.
-- Se a cobertura estiver abaixo de 50%: exibir a tabela de cobertura e solicitar confirmação explícita para prosseguir.
-- Sempre reportar o resumo final de cobertura de testes antes de commitar.
+- Sempre reportar o resumo final de lint/formatação/testes antes de commitar.
