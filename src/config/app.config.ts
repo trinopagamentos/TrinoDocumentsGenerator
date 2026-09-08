@@ -18,6 +18,9 @@ export interface AppConfig {
 
 	/** Quando `true`, salva o HTML final gerado em `/debug/<jobId>.html` (requer volume mount em Docker) */
 	debugSaveHtml: boolean;
+
+	/** Versão da aplicação injetada no deploy (ex: tag da imagem Docker). Padrão: `dev` */
+	appVersion: string;
 }
 
 export default (): AppConfig => {
@@ -36,5 +39,6 @@ export default (): AppConfig => {
 		generatorQueue: process.env.GENERATOR_QUEUE ?? "generator",
 		nodeEnv: process.env.NODE_ENV ?? "production",
 		debugSaveHtml: process.env.DEBUG_SAVE_HTML === "true",
+		appVersion: process.env.APP_VERSION ?? "dev",
 	};
 };

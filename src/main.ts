@@ -10,8 +10,10 @@
 
 import "reflect-metadata";
 import { NestFactory } from "@nestjs/core";
+import { ConfigService } from "@nestjs/config";
 import { Logger } from "@nestjs/common";
 import { AppModule } from "@/app.module.ts";
+import type { AppConfig } from "@/config/app.config.ts";
 import process from "node:process";
 
 /** Logger com contexto "Bootstrap" para identificar logs da inicialização */
@@ -33,7 +35,8 @@ async function bootstrap() {
 	// Dispara os lifecycle hooks (OnModuleInit, OnApplicationBootstrap, etc.)
 	await app.init();
 
-	logger.log("Worker started — consuming generator queue");
+	const config = app.get(ConfigService<AppConfig>);
+	logger.log(`Worker started (version ${config.get("appVersion")}) — consuming generator queue`);
 
 	// Sinal enviado pelo orquestrador (Docker/ECS/Kubernetes) ao parar o contêiner
 	process.on("SIGTERM", async () => {

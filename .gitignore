@@ -7,6 +7,7 @@ coverage_data
 
 # sst
 .sst
+sst-env.d.ts
 
 # IA
 .claude
