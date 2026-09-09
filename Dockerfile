@@ -1,4 +1,4 @@
-FROM denoland/deno:alpine-2.9.5
+FROM denoland/deno:alpine-2.9.6
 
 ARG TZ=America/Sao_Paulo
 ARG NODE_ENV=production

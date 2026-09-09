@@ -206,3 +206,51 @@ Deno.test("TailwindInlineService.processHtml: compileCSS chamado novamente para 
 
 	assertEquals(compileCalls, 2);
 });
+
+// --- compileCSS: compilação real via Tailwind v4 Node API (sem mock) ---
+
+Deno.test({
+	name: "TailwindInlineService.compileCSS: compila CSS real sem DaisyUI e converte oklch() para rgb()",
+	fn: async () => {
+		const service = new TailwindInlineService();
+		const html = '<html><head></head><body class="text-red-500 p-4">Olá</body></html>';
+		const css = await asPrivate(service).compileCSS(html);
+
+		assertEquals(typeof css, "string");
+		assertEquals(css.length > 0, true);
+		// LightningCSS converte oklch() para rgb() — não deve sobrar oklch() no CSS final.
+		assertEquals(css.includes("oklch("), false);
+	},
+	sanitizeResources: false,
+	sanitizeOps: false,
+});
+
+Deno.test({
+	name: "TailwindInlineService.compileCSS: compila CSS real com DaisyUI e tema ativo via loadModule",
+	fn: async () => {
+		const service = new TailwindInlineService();
+		const html =
+			'<html data-theme="dark"><head><link href="https://cdn.jsdelivr.net/npm/daisyui"></head><body class="btn btn-primary">Olá</body></html>';
+		const css = await asPrivate(service).compileCSS(html);
+
+		assertEquals(typeof css, "string");
+		assertEquals(css.length > 0, true);
+		assertStringIncludes(css, ".btn");
+	},
+	sanitizeResources: false,
+	sanitizeOps: false,
+});
+
+Deno.test({
+	name: "TailwindInlineService.processHtml: fluxo completo real (sem mock de compileCSS) injeta <style> compilado",
+	fn: async () => {
+		const service = new TailwindInlineService();
+		const html = '<html><head></head><body class="text-blue-700">Real</body></html>';
+		const result = await service.processHtml(html);
+
+		assertStringIncludes(result, "<style>");
+		assertStringIncludes(result, "Real");
+	},
+	sanitizeResources: false,
+	sanitizeOps: false,
+});

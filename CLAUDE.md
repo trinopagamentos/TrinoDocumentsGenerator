@@ -68,10 +68,6 @@ src/
 └── app.module.ts                       # Root module (ConfigModule + BullModule)
 ```
 
-## PR title format
-
-`[TrinoDocWorker] <Title>`
-
 ## Infrastructure
 
 Deployed as an ECS Fargate service via SST v4 (`sst.config.ts`). No load balancer — pure worker.
@@ -82,3 +78,7 @@ Deployed as an ECS Fargate service via SST v4 (`sst.config.ts`). No load balance
 
 Redis endpoints for each stage are in the `REDIS_HOSTS` constant in `sst.config.ts`. Update them when ElastiCache
 clusters are recreated.
+
+## External rules
+
+@.rules/commit.md @.rules/pr.md
