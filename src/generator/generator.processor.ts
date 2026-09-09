@@ -12,6 +12,7 @@ import { Logger } from "@nestjs/common";
 import { Processor, WorkerHost } from "@nestjs/bullmq";
 import { ConfigService } from "@nestjs/config";
 import { Job, UnrecoverableError } from "bullmq";
+import * as v from "valibot";
 import { SkreenService } from "@/shared/services/skreen.service.ts";
 import { S3Service } from "@/shared/services/s3.service.ts";
 import { TailwindInlineService } from "@/shared/services/tailwind-inline.service.ts";
@@ -48,17 +49,17 @@ export class GeneratorProcessor extends WorkerHost {
 	async process(job: Job<GenerateDocumentJobData>): Promise<GenerateDocumentJobResult> {
 		// Valida o payload recebido contra o schema Zod antes de processar.
 		// Payload inválido é um erro permanente: não deve entrar no retry padrão da fila.
-		const parseResult = GenerateDocumentJobDataSchema.safeParse(job.data);
+		const parseResult = v.safeParse(GenerateDocumentJobDataSchema, job.data);
 		if (!parseResult.success) {
 			this.logger.error({
 				msg: "Invalid job payload",
 				jobId: job.id,
 				queue: job.queueName,
-				issues: parseResult.error.issues,
+				issues: parseResult.issues,
 			});
 			throw new UnrecoverableError("Invalid GenerateDocumentJobData payload");
 		}
-		const data = parseResult.data;
+		const data = parseResult.output;
 
 		try {
 			this.logger.log({
